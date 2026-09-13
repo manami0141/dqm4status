@@ -33,6 +33,12 @@
       padding: 0;
     }
 
+    html,
+    body {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg-color);
@@ -44,6 +50,7 @@
     .container {
       max-width: 1040px;
       margin: 0 auto;
+      width: 100%;
     }
 
     .grid-container {
@@ -122,6 +129,16 @@
       color: var(--text-main);
       font-size: 0.95rem;
       transition: border-color 0.2s;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
     }
 
     input[type="number"]:focus,
@@ -279,21 +296,94 @@
     }
 
     @media (max-width: 650px) {
+      body {
+        padding: 8px 6px;
+      }
+      .card {
+        padding: 12px 8px;
+        border-radius: 10px;
+      }
+      .card h2 {
+        font-size: 1.05rem;
+        margin-bottom: 10px;
+      }
       .config-grid-2x2 {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 8px;
+        padding: 8px;
+      }
+      .config-cell label {
+        width: 56px;
+        font-size: 0.82rem;
+      }
+      .config-cell input[type="number"],
+      .config-cell select {
+        height: 34px;
+        font-size: 0.88rem;
+      }
+      .size-toggle-box {
+        height: 34px;
+      }
+      .stats-table-grid {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .stats-row {
-        grid-template-columns: 44px 1fr 44px 55px 55px 70px;
-        gap: 5px;
-        font-size: 0.85rem;
-        padding: 5px 6px;
+        grid-template-columns: 32px minmax(44px, 1fr) 32px 42px 42px 52px;
+        gap: 3px;
+        font-size: 0.78rem;
+        padding: 4px 3px;
+      }
+      .stats-row label {
+        font-size: 0.8rem;
+      }
+      .stats-row input {
+        font-size: 0.82rem;
+        padding: 3px 2px;
+        height: 28px;
+        min-width: 0;
       }
       .stats-header-row {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
+        padding: 3px 3px;
+      }
+      .col-coeff {
+        font-size: 0.76rem;
+      }
+      .col-boost {
+        font-size: 0.78rem;
+      }
+      .col-corr {
+        font-size: 0.76rem;
+      }
+      .corr-200 {
+        padding: 1px 2px;
+        font-size: 0.74rem;
       }
       .col-final {
-        font-size: 0.96rem;
+        font-size: 0.86rem;
+      }
+      .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      th,
+      td {
+        padding: 6px 3px;
+        font-size: 0.75rem;
+      }
+      .personality-plus-200 {
+        padding: 1px 3px;
+        font-size: 0.74rem;
+      }
+      .info-box {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+      }
+      .info-box ul {
+        margin-left: 16px;
       }
     }
 
@@ -472,6 +562,7 @@
       border-radius: 4px;
       color: #93c5fd;
       font-family: monospace;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -769,14 +860,14 @@
       </div>
     </div>
 
-    <!-- 補足説明 -->
+    <!-- 捕捉 -->
     <div class="info-box">
-      <strong>計算ルール補足:</strong>
+      <strong>捕捉:</strong>
       <ul>
         <li><strong>最終ステータス計算式:</strong> <code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
-        <li><strong>倍率計算:</strong> <code>特性倍率（AI行動/メタルボディ） × サイズ補正（S / L）</code> ※基準値×倍率は切り上げ（Math.ceil）</li>
+        <li><strong>倍率計算:</strong> <code>特性倍率（AI行動/メタルボディ） × サイズ補正（S / L）</code></li>
         <li><strong>系図計算式:</strong> <code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
-        <li><strong>祖父母ボーナス:</strong> 祖父母4体の系統がすべて選択され、かつすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
+        <li><strong>祖父母ボーナス:</strong> 祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
         <li>※入力内容はブラウザのローカルストレージへ自動保存されます。</li>
       </ul>
     </div>
