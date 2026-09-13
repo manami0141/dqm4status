@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DQM4 ステータス計算</title>
+  <style>
+    :root {
+      --bg-color: #1a1e29;
+      --card-bg: #242936;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+      --border-color: #374151;
+      --input-bg: #111827;
+      --table-header: #1f2937;
+      --table-hover: #2d3748;
+      --highlight: #60a5fa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: var(--highlight);
+      margin-bottom: 4px;
+    }
+
+    header p {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 820px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    /* レベル入力行 */
+    .level-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .level-row label {
+      font-size: 0.9rem;
+      color: var(--highlight);
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+
+    .level-row input {
+      width: 90px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* ステータス入力・結果一体化グリッド */
+    .stats-table-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 60px 90px 45px 70px 80px;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .stats-header-row {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-weight: 600;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 4px;
+    }
+
+    /* セル内のテキストをすべて中央揃え */
+    .stats-header-row div {
+      text-align: center;
+    }
+
+    .stats-row label {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .stats-row input {
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      padding: 5px 6px;
+    }
+
+    .col-coeff {
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+
+    .col-boost {
+      text-align: center;
+      color: #34d399;
+      font-weight: bold;
+    }
+
+    .col-final {
+      text-align: center;
+      color: #60a5fa;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    /* スマホ表示向けレスポンシブ最適化 (横スクロール不要化 & 係数非表示) */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 12px 14px;
+      }
+
+      .stats-row {
+        grid-template-columns: 50px 75px 60px 70px;
+        gap: 6px;
+        font-size: 0.85rem;
+      }
+
+      /* スマホ版は合計係数(3列目)を非表示 */
+      .stats-row .col-coeff,
+      .stats-header-row div:nth-child(3) {
+        display: none;
+      }
+
+      .stats-row input {
+        padding: 4px 4px;
+        font-size: 0.85rem;
+      }
+
+      .level-row input {
+        width: 75px;
+      }
+
+      th,
+      td {
+        padding: 6px 6px;
+        font-size: 0.8rem;
+      }
+    }
+
+    .family-section {
+      margin-bottom: 12px;
+    }
+
+    .family-section h3 {
+      font-size: 0.95rem;
+      color: var(--highlight);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .grandparents-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .results-card {
+      margin-top: 16px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: var(--table-header);
+      color: var(--text-sub);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    tr:hover {
+      background-color: var(--table-hover);
+    }
+
+    .stat-name {
+      font-weight: bold;
+    }
+
+    /* 対応表・下部設定スタイル */
+    .matrix-table {
+      text-align: center;
+    }
+
+    .matrix-table th {
+      text-align: center;
+    }
+
+    .circle-mark {
+      color: var(--highlight);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .advanced-card {
+      margin-top: 16px;
+    }
+
+    .config-grid-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-group-horizontal {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group-horizontal label {
+      width: 100px;
+      margin-bottom: 0;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .form-group-horizontal input {
+      flex: 1;
+    }
+
+    @media (max-width: 600px) {
+      .config-grid-bottom {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .info-box {
+      margin-top: 16px;
+      background-color: rgba(59, 130, 246, 0.1);
+      border-left: 4px solid var(--accent-color);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .info-box ul {
+      margin-left: 20px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="grid-container">
+      <!-- ステータス上限値入力・右側に伸幅・最終値表示 (スマホ対応最適化) -->
+      <div class="card">
+        <h2>
+          <span>ステータス設定</span>
+        </h2>
+
+        <!-- 親合計レベル -->
+        <div class="level-row">
+          <label for="level">親合計レベル</label>
+          <input type="number" id="level" value="100" min="1" step="1">
+        </div>
+
+        <!-- 6つのステータス入力欄 ＆ 右側リアルタイム結果 (スマホでは係数非表示) -->
+        <div class="stats-table-grid">
+          <div class="stats-row stats-header-row">
+            <div></div>
+            <div>上限</div>
+            <div class="col-coeff-header">係数</div>
+            <div>伸幅</div>
+            <div>最終</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-hp">HP</label>
+            <input type="number" id="stat-hp" value="1390" min="0" step="10">
+            <div class="col-coeff" id="coeff-hp">0</div>
+            <div class="col-boost" id="boost-hp">+0</div>
+            <div class="col-final" id="final-hp">0</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-mp">MP</label>
+            <input type="number" id="stat-mp" value="540" min="0" step="10">
+            <div class="col-coeff" id="coeff-mp">0</div>
+            <div class="col-boost" id="boost-mp">+0</div>
+            <div class="col-final" id="final-mp">0</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-atk">攻撃</label>
+            <input type="number" id="stat-atk" value="490" min="0" step="10">
+            <div class="col-coeff" id="coeff-atk">0</div>
+            <div class="col-boost" id="boost-atk">+0</div>
+            <div class="col-final" id="final-atk">0</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-def">守備</label>
+            <input type="number" id="stat-def" value="540" min="0" step="10">
+            <div class="col-coeff" id="coeff-def">0</div>
+            <div class="col-boost" id="boost-def">+0</div>
+            <div class="col-final" id="final-def">0</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-spd">素早</label>
+            <input type="number" id="stat-spd" value="430" min="0" step="10">
+            <div class="col-coeff" id="coeff-spd">0</div>
+            <div class="col-boost" id="boost-spd">+0</div>
+            <div class="col-final" id="final-spd">0</div>
+          </div>
+
+          <div class="stats-row">
+            <label for="stat-wis">賢さ</label>
+            <input type="number" id="stat-wis" value="520" min="0" step="10">
+            <div class="col-coeff" id="coeff-wis">0</div>
+            <div class="col-boost" id="boost-wis">+0</div>
+            <div class="col-final" id="final-wis">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 系統選択欄 -->
+      <div class="card">
+        <h2>家系図（系統選択）</h2>
+
+        <div class="family-section">
+          <h3>両親（係数: 1.0）</h3>
+          <div class="grandparents-grid" style="margin-bottom: 8px;">
+            <div class="form-group">
+              <label for="parent1">親 1</label>
+              <select id="parent1" class="family-select">
+                <option value="none">指定なし</option>
+                <option value="slime" selected>スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material">物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="parent2">親 2</label>
+              <select id="parent2" class="family-select">
+                <option value="none">指定なし</option>
+                <option value="slime">スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material" selected>物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="family-section">
+          <h3>
+            <span>祖父母（<span id="gp-coeff-display">係数:0.5</span>）</span>
+          </h3>
+          <div class="grandparents-grid">
+            <div class="form-group">
+              <label for="grandparent1">祖父母 1</label>
+              <select id="grandparent1" class="family-select">
+                <option value="none" selected>指定なし</option>
+                <option value="slime">スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material">物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="grandparent2">祖父母 2</label>
+              <select id="grandparent2" class="family-select">
+                <option value="none" selected>指定なし</option>
+                <option value="slime">スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material">物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="grandparent3">祖父母 3</label>
+              <select id="grandparent3" class="family-select">
+                <option value="none">指定なし</option>
+                <option value="slime">スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material">物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="grandparent4">祖父母 4</label>
+              <select id="grandparent4" class="family-select">
+                <option value="none">指定なし</option>
+                <option value="slime">スライム</option>
+                <option value="dragon">ドラゴン</option>
+                <option value="nature">自然</option>
+                <option value="beast">魔獣</option>
+                <option value="demon">悪魔</option>
+                <option value="zombie">ゾンビ</option>
+                <option value="material">物質</option>
+                <option value="legend">???</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系統ステータス対応表 -->
+    <div class="card results-card">
+      <h2>対応表</h2>
+      <div class="table-wrapper">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>系統</th>
+              <th>HP</th>
+              <th>MP</th>
+              <th>攻撃</th>
+              <th>守備</th>
+              <th>素早</th>
+              <th>賢さ</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-body">
+            <!-- JSでsystemBonusMapに基づいて動的に更新 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 詳細設定（計算定数・祖父母係数）: ページ下部に配置 -->
+    <div class="card advanced-card">
+      <h2>詳細設定</h2>
+      <div class="config-grid-bottom">
+        <div class="form-group-horizontal">
+          <label for="divisor">除数</label>
+          <input type="number" id="divisor" value="40000" min="1">
+        </div>
+        <div class="form-group-horizontal">
+          <label for="grandparent-coeff">祖父母の係数</label>
+          <input type="number" id="grandparent-coeff" value="0.5" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- 補足説明 -->
+    <div class="info-box">
+      <strong>計算ルール補足:</strong>
+      <ul>
+        <li><strong>伸び幅計算式:</strong> <code>Math.floor(上限値 × 親合計レベル × 合計係数 / 序数)</code></li>
+        <li><strong>最終ステータス:</strong> <code>上限値 + 伸び幅</code></li>
+        <li>※入力内容はブラウザ（ローカルストレージ）に自動保存され、再読み込み時にも引き継がれます。</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'dqm4_pedigree_bonus_calc_data';
+
+    // 系統表示名マップ
+    const systemNames = {
+      slime: 'スライム',
+      dragon: 'ドラゴン',
+      nature: '自然',
+      beast: '魔獣',
+      demon: '悪魔',
+      zombie: 'ゾンビ',
+      material: '物質',
+      legend: '???'
+    };
+
+    // 系統ごとの適用ステータスマップ（ユーザー設定）
+    const systemBonusMap = {
+      slime: { hp: true, mp: false, atk: false, def: false, spd: true, wis: true },
+      dragon: { hp: true, mp: true, atk: true, def: false, spd: false, wis: false },
+      nature: { hp: false, mp: false, atk: false, def: true, spd: true, wis: true },
+      beast: { hp: false, mp: true, atk: false, def: true, spd: true, wis: false },
+      demon: { hp: false, mp: true, atk: true, def: true, spd: false, wis: false },
+      zombie: { hp: true, mp: true, atk: false, def: false, spd: true, wis: false },
+      material: { hp: false, mp: false, atk: true, def: true, spd: false, wis: true },
+      legend: { hp: true, mp: false, atk: true, def: false, spd: false, wis: true },
+    };
+
+    // ステータス定義
+    const statsConfig = [
+      { id: 'hp', name: 'HP' },
+      { id: 'mp', name: 'MP' },
+      { id: 'atk', name: '攻撃' },
+      { id: 'def', name: '守備' },
+      { id: 'spd', name: '素早' },
+      { id: 'wis', name: '賢さ' }
+    ];
+
+    const inputIds = [
+      'level', 'divisor', 'grandparent-coeff',
+      'stat-hp', 'stat-mp', 'stat-atk', 'stat-def', 'stat-spd', 'stat-wis',
+      'parent1', 'parent2',
+      'grandparent1', 'grandparent2', 'grandparent3', 'grandparent4'
+    ];
+
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrix-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      Object.keys(systemBonusMap).forEach(sysKey => {
+        const sysName = systemNames[sysKey] || sysKey;
+        const rowMap = systemBonusMap[sysKey];
+
+        const tr = document.createElement('tr');
+        let cellsHtml = `<td class="stat-name">${sysName}</td>`;
+
+        statsConfig.forEach(stat => {
+          const isTarget = rowMap[stat.id];
+          cellsHtml += isTarget ? `<td class="circle-mark">〇</td>` : `<td></td>`;
+        });
+
+        tr.innerHTML = cellsHtml;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function calculate() {
+      const level = parseFloat(document.getElementById('level').value) || 0;
+      const divisor = parseFloat(document.getElementById('divisor').value) || 40000;
+      const gpCoeff = parseFloat(document.getElementById('grandparent-coeff').value) || 0;
+
+      // 祖父母係数の表示更新
+      document.getElementById('gp-coeff-display').textContent = `係数:${gpCoeff}`;
+
+      // 系統選択の値を取得
+      const parents = [
+        document.getElementById('parent1').value,
+        document.getElementById('parent2').value
+      ];
+
+      const grandparents = [
+        document.getElementById('grandparent1').value,
+        document.getElementById('grandparent2').value,
+        document.getElementById('grandparent3').value,
+        document.getElementById('grandparent4').value
+      ];
+
+      statsConfig.forEach(stat => {
+        const inputElem = document.getElementById(`stat-${stat.id}`);
+        const cap = parseFloat(inputElem.value) || 0;
+
+        // 合計係数の計算
+        let totalCoeff = 0;
+
+        // 親 (係数 1.0)
+        parents.forEach(p => {
+          if (systemBonusMap[p] && systemBonusMap[p][stat.id]) {
+            totalCoeff += 1.0;
+          }
+        });
+
+        // 祖父母 (設定された係数 gpCoeff)
+        grandparents.forEach(gp => {
+          if (systemBonusMap[gp] && systemBonusMap[gp][stat.id]) {
+            totalCoeff += gpCoeff;
+          }
+        });
+
+        // 伸び幅 = floor(上限値 * 親合計レベル * 合計係数 / 除数)
+        const boost = divisor > 0 ? Math.floor((cap * level * totalCoeff) / divisor) : 0;
+        const finalStat = cap + boost;
+
+        // 入力欄の右側リアルタイム表示要素を直接更新
+        const coeffElem = document.getElementById(`coeff-${stat.id}`);
+        const boostElem = document.getElementById(`boost-${stat.id}`);
+        const finalElem = document.getElementById(`final-${stat.id}`);
+
+        if (coeffElem) coeffElem.textContent = totalCoeff.toLocaleString(undefined, { maximumFractionDigits: 2 });
+        if (boostElem) boostElem.textContent = `+${boost.toLocaleString()}`;
+        if (finalElem) finalElem.textContent = finalStat.toLocaleString();
+      });
+
+      saveToLocalStorage();
+    }
+
+    function saveToLocalStorage() {
+      const data = {};
+      inputIds.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+          data[id] = elem.value;
+        }
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          inputIds.forEach(id => {
+            if (data[id] !== undefined) {
+              const elem = document.getElementById(id);
+              if (elem) {
+                elem.value = data[id];
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e);
+      }
+    }
+
+    // 初期化とイベントリスナーの登録
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+      renderMatrixTable();
+      calculate();
+
+      document.querySelectorAll('input, select').forEach(elem => {
+        elem.addEventListener('input', calculate);
+        elem.addEventListener('change', calculate);
+      });
+    });
+  </script>
+</body>
+
+</html>
