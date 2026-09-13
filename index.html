@@ -190,8 +190,9 @@
       text-align: center;
       font-weight: bold;
       height: 38px;
-      flex: 1;
-      min-width: 0;
+      width: 80px;
+      max-width: 90px;
+      flex: 0 0 auto;
     }
 
     .config-cell select {
@@ -205,15 +206,16 @@
     .size-toggle-box {
       display: flex;
       align-items: center;
-      justify-content: space-around;
+      justify-content: center;
       gap: 16px;
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
       height: 38px;
-      padding: 0 12px;
-      flex: 1;
-      min-width: 0;
+      padding: 0 16px;
+      flex: 0 0 auto;
+      width: fit-content;
+      min-width: 120px;
     }
 
     .size-option {
@@ -568,13 +570,22 @@
         width: 56px;
         font-size: 0.82rem;
       }
-      .config-cell input[type="number"],
+      .config-cell input[type="number"] {
+        height: 34px;
+        font-size: 0.88rem;
+        width: 76px;
+        flex: 0 0 auto;
+      }
       .config-cell select {
         height: 34px;
         font-size: 0.88rem;
       }
       .size-toggle-box {
         height: 34px;
+        flex: 0 0 auto;
+        min-width: 110px;
+        padding: 0 14px;
+        gap: 14px;
       }
       .stats-table-grid {
         width: 100%;
@@ -709,10 +720,10 @@
 
         <!-- プラス値・性格・サイズ・特性の入力欄を2×2のグリッドで整列 (ラベルは左) -->
         <div class="config-grid-2x2" id="config-grid">
-          <!-- 1. プラス値 -->
+          <!-- 1. プラス -->
           <div class="config-cell">
-            <label for="plus">プラス値</label>
-            <input type="number" id="plus" value="3" min="0" step="1">
+            <label for="plus">プラス</label>
+            <input type="number" id="plus" value="3" min="0" max="999" step="1">
           </div>
 
           <!-- 2. 性格 -->
@@ -1384,7 +1395,15 @@
     }
 
     function calculate() {
-      const plus = parseFloat(document.getElementById('plus').value) || 0;
+      const plusEl = document.getElementById('plus');
+      let plus = parseFloat(plusEl.value) || 0;
+      if (plus > 999) {
+        plus = 999;
+        plusEl.value = '999';
+      } else if (plus < 0) {
+        plus = 0;
+        plusEl.value = '0';
+      }
       const gpCoeff = 0.5;
       const personality = document.getElementById('personality').value;
 
