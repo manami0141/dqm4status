@@ -481,7 +481,7 @@
 
         <div class="family-section">
           <h3>
-            <span>祖父母（<span id="gp-coeff-display">係数:0.5</span>）</span>
+            <span>祖父母（係数:0.5）</span>
           </h3>
           <div class="grandparents-grid">
             <div class="form-group">
@@ -569,7 +569,7 @@
     </div>
 
     <!-- 詳細設定（計算定数・祖父母係数）: ページ下部に配置 -->
-    <div class="card advanced-card">
+    <!-- <div class="card advanced-card">
       <h2>詳細設定</h2>
       <div class="config-grid-bottom">
         <div class="form-group-horizontal">
@@ -581,13 +581,13 @@
           <input type="number" id="grandparent-coeff" value="0.5" step="0.01" min="0">
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 補足説明 -->
     <div class="info-box">
       <strong>計算ルール補足:</strong>
       <ul>
-        <li><strong>伸び幅計算式:</strong> <code>Math.floor(上限値 × 親合計レベル × 合計係数 × (1+プラス値) / 除数)</code></li>
+        <li><strong>伸び幅計算式:</strong> <code>Math.floor(上限値 × 親合計レベル × 合計係数 × (1 + プラス値 × 0.1) / 50000)</code></li>
         <li><strong>最終ステータス:</strong> <code>上限値 + 伸び幅</code></li>
         <li>※入力内容はブラウザ（ローカルストレージ）に自動保存され、再読み込み時にも引き継がれます。</li>
       </ul>
@@ -632,7 +632,7 @@
     ];
 
     const inputIds = [
-      'level', 'divisor', 'grandparent-coeff',
+      'level', 'plus',
       'stat-hp', 'stat-mp', 'stat-atk', 'stat-def', 'stat-spd', 'stat-wis',
       'parent1', 'parent2',
       'grandparent1', 'grandparent2', 'grandparent3', 'grandparent4'
@@ -662,11 +662,9 @@
 
     function calculate() {
       const level = parseFloat(document.getElementById('level').value) || 0;
-      const divisor = parseFloat(document.getElementById('divisor').value) || 40000;
-      const gpCoeff = parseFloat(document.getElementById('grandparent-coeff').value) || 0;
-
-      // 祖父母係数の表示更新
-      document.getElementById('gp-coeff-display').textContent = `係数:${gpCoeff}`;
+      const divisor = 50000
+      const gpCoeff = 0.5;
+      const plus = parseFloat(document.getElementById('plus').value) || 0;
 
       // 系統選択の値を取得
       const parents = [
@@ -701,8 +699,6 @@
             totalCoeff += gpCoeff;
           }
         });
-
-        const plus = parseFloat(document.getElementById('plus').value) || 0;
 
         // 伸び幅 = floor(上限値 * 親合計レベル * 合計係数 * (1+plus*0.1) / 除数)
         const boost = divisor > 0 ? Math.floor((cap * level * totalCoeff) * (1 + plus * 0.1) / divisor) : 0;
