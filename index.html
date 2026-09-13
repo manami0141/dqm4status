@@ -5,9 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DQM4 ステータス計算機</title>
-  <meta name="description" content="DQM4のステータス基準値、家系図（親・祖父母）による系図ボーナス、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。種族名プリセットからの一括入力に対応。" />
+  <meta name="description" content="DQM4のステータス計算器" />
   <meta property="og:title" content="DQM4 ステータス計算機" />
-  <meta property="og:description" content="DQM4のステータス基準値、家系図（親・祖父母）による系図ボーナス、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。種族名プリセットからの一括入力に対応。" />
+  <meta property="og:description" content="DQM4のステータス計算器" />
   <style>
     :root {
       --bg-color: #1a1e29;
@@ -43,7 +43,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      padding: 16px;
+      padding: 8px;
       line-height: 1.5;
     }
 
@@ -53,14 +53,19 @@
       width: 100%;
     }
 
+    .monster-card {
+      margin-bottom: 8px;
+    }
+
     .grid-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 10px;
       margin-bottom: 20px;
+      align-items: start;
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 860px) {
       .grid-container {
         grid-template-columns: 1fr;
       }
@@ -69,35 +74,16 @@
     .card {
       background-color: var(--card-bg);
       border-radius: 12px;
-      padding: 16px 20px;
+      padding: 8px;
       border: 1px solid var(--border-color);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    }
-
-    .card h2 {
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-      padding-bottom: 5px;
-      border-bottom: 2px solid var(--accent-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card h2 .formula-badge {
-      font-size: 0.72rem;
-      color: #93c5fd;
-      font-weight: normal;
-      font-family: monospace;
     }
 
     /* 種族名一括入力セレクター */
     .monster-select-bar {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-      padding: 10px 12px;
+      padding: 4px 10px;
       background-color: var(--card-inner);
       border: 1px solid var(--border-color);
       border-radius: 10px;
@@ -130,29 +116,51 @@
       border-color: var(--accent-color);
     }
 
-    /* 2×2のグリッド配置 (プラス値・性格・サイズ・特性) - ラベルを左に配置 */
+    /* モンスターカードの入力欄 (PCでは横1列に並ぶ) */
+    .monster-params-row,
     .config-grid-2x2 {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
-      padding: 12px;
+      grid-template-columns: minmax(120px, 0.8fr) minmax(160px, 1.2fr) minmax(130px, 0.9fr) minmax(170px, 1.4fr);
+      gap: 10px;
+      margin-bottom: 0;
+      padding: 4px 10px;
       background-color: var(--card-inner);
       border: 1px solid var(--border-color);
       border-radius: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 860px) {
+
+      .monster-params-row,
+      .config-grid-2x2 {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 4px 10px;
+      }
+    }
+
+    @media (max-width: 520px) {
+
+      .monster-params-row,
+      .config-grid-2x2 {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 4px 10px;
+      }
     }
 
     .config-cell {
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
     .config-cell label {
       font-size: 0.84rem;
       color: var(--highlight);
       font-weight: bold;
-      width: 52px;
       flex-shrink: 0;
       white-space: nowrap;
       margin-bottom: 0;
@@ -190,8 +198,8 @@
       text-align: center;
       font-weight: bold;
       height: 38px;
-      width: 80px;
-      max-width: 90px;
+      width: 72px;
+      max-width: 80px;
       flex: 0 0 auto;
     }
 
@@ -207,15 +215,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 12px;
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
       height: 38px;
-      padding: 0 16px;
+      padding: 0 12px;
       flex: 0 0 auto;
       width: fit-content;
-      min-width: 120px;
+      min-width: 96px;
     }
 
     .size-option {
@@ -237,11 +245,96 @@
       color: var(--highlight);
     }
 
+    /* ステータス表示切り替えタブ */
+    .status-tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      background-color: var(--input-bg);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .status-tab-btn {
+      flex: 1;
+      padding: 7px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-sub);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .status-tab-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-tab-btn.active {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+    }
+
+    /* レーダーチャートカード */
+    .stats-chart-wrapper {
+      width: 100%;
+    }
+
+    .radar-chart-card {
+      background: radial-gradient(circle at center, #352618 0%, #1c140c 100%);
+      border: 1px solid rgba(217, 119, 6, 0.35);
+      border-radius: 10px;
+      padding: 6px 4px;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.25);
+      max-width: 270px;
+      margin: 0 auto;
+    }
+
+    #radar-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+    }
+
+    .radar-label-name {
+      fill: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      paint-order: stroke fill;
+      stroke: #181109;
+      stroke-width: 3.5px;
+      stroke-linejoin: round;
+    }
+
+    .radar-label-val {
+      fill: #facc15;
+      font-size: 19px;
+      font-weight: 800;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      letter-spacing: 0.5px;
+      paint-order: stroke fill;
+      stroke: #181109;
+      stroke-width: 3.5px;
+      stroke-linejoin: round;
+    }
+
     /* ステータス入力・計算グリッド */
     .stats-table-grid {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 1px;
       width: 100%;
     }
 
@@ -249,9 +342,9 @@
       display: grid;
       grid-template-columns: 50px 1fr 50px 65px 65px 80px;
       align-items: center;
-      gap: 8px;
+      gap: 2px;
       font-size: 0.9rem;
-      padding: 6px 8px;
+      padding: 2px;
       border-radius: 6px;
       background-color: #1a202c;
       border: 1px solid rgba(55, 65, 81, 0.5);
@@ -344,6 +437,7 @@
     }
 
     .family-section h3 {
+      margin-top: 0;
       font-size: 0.84rem;
       color: var(--highlight);
       margin-bottom: 6px;
@@ -395,7 +489,7 @@
     }
 
     .results-card {
-      margin-top: 16px;
+      margin-top: 8px;
     }
 
     .table-wrapper {
@@ -538,92 +632,136 @@
       body {
         padding: 8px 6px;
       }
+
       .card {
         padding: 12px 8px;
         border-radius: 10px;
       }
+
       .card h2 {
         font-size: 0.9rem;
         margin-bottom: 8px;
         padding-bottom: 4px;
       }
+
       .monster-select-bar {
         padding: 8px;
         gap: 8px;
         margin-bottom: 8px;
       }
+
       .monster-select-bar label {
         width: 56px;
         font-size: 0.82rem;
       }
+
       .monster-select-bar select {
         height: 34px;
         font-size: 0.88rem;
         padding: 4px 8px;
       }
+
+      .monster-params-row,
       .config-grid-2x2 {
         grid-template-columns: 1fr;
         gap: 8px;
         padding: 8px;
       }
+
       .config-cell label {
-        width: 56px;
         font-size: 0.82rem;
       }
+
       .config-cell input[type="number"] {
         height: 34px;
         font-size: 0.88rem;
-        width: 76px;
+        width: 70px;
         flex: 0 0 auto;
       }
+
       .config-cell select {
         height: 34px;
         font-size: 0.88rem;
       }
+
       .size-toggle-box {
         height: 34px;
         flex: 0 0 auto;
-        min-width: 110px;
-        padding: 0 14px;
-        gap: 14px;
+        min-width: 90px;
+        padding: 0 10px;
+        gap: 10px;
       }
+
+      .status-tab-bar {
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .status-tab-btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+      }
+
+      .radar-chart-card {
+        padding: 6px 4px;
+        max-width: 260px;
+        border-radius: 10px;
+      }
+
+      .radar-label-name {
+        font-size: 14px;
+      }
+
+      .radar-label-val {
+        font-size: 19px;
+      }
+
       .stats-table-grid {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
       }
+
       .stats-row {
         grid-template-columns: 32px minmax(44px, 1fr) 32px 42px 42px 52px;
-        gap: 3px;
+        gap: 2px;
         font-size: 0.78rem;
-        padding: 4px 3px;
+        padding: 2px;
       }
+
       .stats-row label {
         font-size: 0.8rem;
       }
+
       .stats-row input {
         font-size: 0.82rem;
         padding: 3px 2px;
         height: 28px;
         min-width: 0;
       }
+
       .stats-header-row {
         font-size: 0.7rem;
         padding: 3px 3px;
       }
+
       .col-coeff {
         font-size: 0.76rem;
       }
+
       .col-boost {
         font-size: 0.78rem;
       }
+
       .col-corr {
         font-size: 0.76rem;
       }
+
       .corr-200 {
         padding: 1px 2px;
         font-size: 0.74rem;
       }
+
       .col-final {
         font-size: 0.86rem;
       }
@@ -634,12 +772,14 @@
         display: block;
         overflow-x: hidden;
       }
+
       .matrix-table,
       .table-fit-content {
         table-layout: fixed;
         width: 100% !important;
         min-width: 0;
       }
+
       .matrix-table th,
       .matrix-table td,
       .table-fit-content th,
@@ -650,6 +790,7 @@
         text-align: center;
         vertical-align: middle;
       }
+
       /* 1列目 (系統・性格): 縦に折り返してコンパクトに表示 */
       .matrix-table th:first-child,
       .matrix-table td:first-child,
@@ -665,6 +806,7 @@
         padding: 4px 2px !important;
         text-align: center !important;
       }
+
       /* 2〜7列目 (HP, MP, 攻撃, 守備, 素早, 賢さ): 均等配分で表示 */
       .matrix-table th:not(:first-child),
       .matrix-table td:not(:first-child),
@@ -675,27 +817,33 @@
         white-space: nowrap !important;
         padding: 4px 0 !important;
       }
+
       .personality-plus-200 {
         padding: 1px 2px !important;
         font-size: 0.64rem !important;
         letter-spacing: -0.5px !important;
         border-width: 1px !important;
       }
+
       .personality-plus-100,
       .personality-minus,
       .personality-zero {
         font-size: 0.68rem !important;
       }
+
       .circle-mark {
         font-size: 0.85rem !important;
       }
+
       .dash-mark {
         font-size: 0.75rem !important;
       }
+
       .info-box {
         padding: 10px 12px;
         font-size: 0.8rem;
       }
+
       .info-box ul {
         margin-left: 16px;
       }
@@ -705,74 +853,83 @@
 
 <body>
   <div class="container">
-    <div class="grid-container">
-      <!-- ステータス設定カード -->
-      <div class="card" id="status-card">
-        <h2>ステータス設定</h2>
+    <!-- モンスターカード (上に左右にまたがる) -->
+    <div class="card monster-card" id="monster-card">
+      <!-- 種族選択 (ステータス一括入力) -->
+      <div class="monster-select-bar">
+        <label for="monster-select">種族名</label>
+        <select id="monster-select">
+          <option value="">-- 種族を選択して基準値を一括入力 --</option>
+        </select>
+      </div>
 
-        <!-- 種族選択 (ステータス一括入力) -->
-        <div class="monster-select-bar">
-          <label for="monster-select">種族名</label>
-          <select id="monster-select">
-            <option value="">-- 種族を選択して基準値を一括入力 --</option>
+      <!-- プラス、性格、サイズ、特性の入力欄 (PCでは横1列に並ぶ) -->
+      <div class="monster-params-row" id="config-grid">
+        <!-- 1. プラス -->
+        <div class="config-cell">
+          <label for="plus">プラス</label>
+          <input type="number" id="plus" value="3" min="0" max="999" step="1">
+        </div>
+
+        <!-- 2. 性格 -->
+        <div class="config-cell">
+          <label for="personality">性格</label>
+          <select id="personality">
+            <option value="いのちしらず">いのちしらず</option>
+            <option value="がんばりや">がんばりや</option>
+            <option value="きまぐれ">きまぐれ</option>
+            <option value="じょうねつか">じょうねつか</option>
+            <option value="せっきょくてき">せっきょくてき</option>
+            <option value="たかびしゃ">たかびしゃ</option>
+            <option value="ちょとつもうしん">ちょとつもうしん</option>
+            <option value="にんじょうか">にんじょうか</option>
+            <option value="まけずぎらい">まけずぎらい</option>
+            <option value="まじめ" selected>まじめ</option>
+            <option value="ゆうかん">ゆうかん</option>
+            <option value="らくてんか">らくてんか</option>
+            <option value="れいせい">れいせい</option>
           </select>
         </div>
 
-        <!-- プラス値・性格・サイズ・特性の入力欄を2×2のグリッドで整列 (ラベルは左) -->
-        <div class="config-grid-2x2" id="config-grid">
-          <!-- 1. プラス -->
-          <div class="config-cell">
-            <label for="plus">プラス</label>
-            <input type="number" id="plus" value="3" min="0" max="999" step="1">
+        <!-- 3. サイズ -->
+        <div class="config-cell">
+          <label>サイズ</label>
+          <div class="size-toggle-box">
+            <label class="size-option">
+              <input type="radio" name="size" value="S" checked> S
+            </label>
+            <label class="size-option">
+              <input type="radio" name="size" value="L"> L
+            </label>
           </div>
+        </div>
 
-          <!-- 2. 性格 -->
-          <div class="config-cell">
-            <label for="personality">性格</label>
-            <select id="personality">
-              <option value="いのちしらず">いのちしらず</option>
-              <option value="がんばりや">がんばりや</option>
-              <option value="きまぐれ">きまぐれ</option>
-              <option value="じょうねつか">じょうねつか</option>
-              <option value="せっきょくてき">せっきょくてき</option>
-              <option value="たかびしゃ">たかびしゃ</option>
-              <option value="ちょとつもうしん">ちょとつもうしん</option>
-              <option value="にんじょうか">にんじょうか</option>
-              <option value="まけずぎらい">まけずぎらい</option>
-              <option value="まじめ" selected>まじめ</option>
-              <option value="ゆうかん">ゆうかん</option>
-              <option value="らくてんか">らくてんか</option>
-              <option value="れいせい">れいせい</option>
-            </select>
-          </div>
+        <!-- 4. 特性 -->
+        <div class="config-cell">
+          <label for="ai">特性</label>
+          <select id="ai">
+            <option value="1" selected>1回行動</option>
+            <option value="1-2">1～2回行動</option>
+            <option value="1-3">1～3回行動</option>
+            <option value="2">2回行動</option>
+            <option value="2-3">2～3回行動</option>
+            <option value="1-metal">1回行動+メタルボディ</option>
+            <option value="1-2-metal">1～2回行動+メタルボディ</option>
+            <option value="1-3-metal">1～3回行動+メタルボディ</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-          <!-- 3. サイズ -->
-          <div class="config-cell">
-            <label>サイズ</label>
-            <div class="size-toggle-box">
-              <label class="size-option">
-                <input type="radio" name="size" value="S" checked> S
-              </label>
-              <label class="size-option">
-                <input type="radio" name="size" value="L"> L
-              </label>
-            </div>
-          </div>
-
-          <!-- 4. 特性 -->
-          <div class="config-cell">
-            <label for="ai">特性</label>
-            <select id="ai">
-              <option value="1" selected>1回行動</option>
-              <option value="1-2">1～2回行動</option>
-              <option value="1-3">1～3回行動</option>
-              <option value="2">2回行動</option>
-              <option value="2-3">2～3回行動</option>
-              <option value="1-metal">1回行動+メタルボディ</option>
-              <option value="1-2-metal">1～2回行動+メタルボディ</option>
-              <option value="1-3-metal">1～3回行動+メタルボディ</option>
-            </select>
-          </div>
+    <!-- 下部: ステータスカードと家系図カードが左右横並び (スマホ版では縦並び) -->
+    <div class="grid-container">
+      <!-- ステータスカード (表と図) -->
+      <div class="card" id="status-card">
+        <!-- ステータス表示切り替えタブ -->
+        <div class="status-tab-bar">
+          <button type="button" class="status-tab-btn active" id="tab-btn-table"
+            onclick="switchStatusTab('table')">表</button>
+          <button type="button" class="status-tab-btn" id="tab-btn-chart" onclick="switchStatusTab('chart')">図</button>
         </div>
 
         <!-- ステータス入力＆結果グリッド -->
@@ -846,14 +1003,59 @@
             <div class="col-final" id="final-wis">520</div>
           </div>
         </div>
+
+        <!-- チャート図コンテナ -->
+        <div class="stats-chart-wrapper" id="stats-chart-view" style="display: none;">
+          <div class="radar-chart-card">
+            <svg id="radar-svg" viewBox="0 0 250 210" xmlns="http://www.w3.org/2000/svg">
+              <!-- 外枠の六角形 (ゲーム風フレーム) -->
+              <polygon points="125,51 171.8,78 171.8,132 125,159 78.2,132 78.2,78" fill="rgba(65, 80, 102, 0.75)"
+                stroke="rgba(160, 178, 202, 0.6)" stroke-width="1.8" />
+
+              <!-- 6方向のラベル・数値表示 (アイコンなし・コンパクト配置) -->
+              <!-- 1. 最大HP (Top: 12時) -->
+              <g class="radar-label-group" id="radar-group-hp">
+                <text x="125" y="19" text-anchor="middle" class="radar-label-name">最大HP</text>
+                <text x="125" y="39" text-anchor="middle" class="radar-label-val" id="radar-val-hp">--</text>
+              </g>
+
+              <!-- 2. 最大MP (Top-Right: 2時) -->
+              <g class="radar-label-group" id="radar-group-mp">
+                <text x="180" y="73" text-anchor="start" class="radar-label-name">最大MP</text>
+                <text x="180" y="93" text-anchor="start" class="radar-label-val" id="radar-val-mp">--</text>
+              </g>
+
+              <!-- 3. かしこさ (Bottom-Right: 4時) -->
+              <g class="radar-label-group" id="radar-group-wis">
+                <text x="180" y="127" text-anchor="start" class="radar-label-name">かしこさ</text>
+                <text x="180" y="147" text-anchor="start" class="radar-label-val" id="radar-val-wis">--</text>
+              </g>
+
+              <!-- 4. すばやさ (Bottom: 6時) -->
+              <g class="radar-label-group" id="radar-group-spd">
+                <text x="125" y="180" text-anchor="middle" class="radar-label-name">すばやさ</text>
+                <text x="125" y="200" text-anchor="middle" class="radar-label-val" id="radar-val-spd">--</text>
+              </g>
+
+              <!-- 5. 守備力 (Bottom-Left: 8時) -->
+              <g class="radar-label-group" id="radar-group-def">
+                <text x="70" y="127" text-anchor="end" class="radar-label-name">守備力</text>
+                <text x="70" y="147" text-anchor="end" class="radar-label-val" id="radar-val-def">--</text>
+              </g>
+
+              <!-- 6. 攻撃力 (Top-Left: 10時) -->
+              <g class="radar-label-group" id="radar-group-atk">
+                <text x="70" y="73" text-anchor="end" class="radar-label-name">攻撃力</text>
+                <text x="70" y="93" text-anchor="end" class="radar-label-val" id="radar-val-atk">--</text>
+              </g>
+            </svg>
+          </div>
+        </div>
       </div>
 
       <!-- 系統選択カード -->
       <div class="card" id="family-card">
-        <h2>家系図</h2>
-
         <div class="family-section">
-          <h3>両親（係数: 各 1.0）</h3>
           <div class="grandparents-grid">
             <div class="form-group">
               <label for="parent1">親 1</label>
@@ -887,7 +1089,6 @@
         </div>
 
         <div class="family-section">
-          <h3>祖父母（係数: 各 0.5）</h3>
           <div class="grandparents-grid">
             <div class="form-group">
               <label for="grandparent1">祖父母 1</label>
@@ -957,7 +1158,6 @@
 
     <!-- 系統ステータス対応表 -->
     <div class="card results-card" id="matrix-card">
-      <h2>系統対応表</h2>
       <div class="table-wrapper">
         <table class="matrix-table table-fit-content">
           <thead>
@@ -979,12 +1179,6 @@
 
     <!-- 性格対応表 (+200の箇所は+100と一目でわかる特化スタイル) -->
     <div class="card results-card" id="personality-card">
-      <h2>
-        <span>性格対応表</span>
-        <span style="font-size: 0.78rem; font-weight: normal; color: var(--text-sub);">
-          （行クリックで選択）
-        </span>
-      </h2>
       <div class="table-wrapper">
         <table class="matrix-table table-fit-content">
           <thead>
@@ -1442,6 +1636,7 @@
       const aiRates = actionTraitMultipliers[ai] || actionTraitMultipliers['1'];
       const sizeRates = sizeMultipliers[size] || sizeMultipliers['S'];
 
+      const finalValues = {};
       statsConfig.forEach((stat) => {
         const cap = parseFloat(document.getElementById('stat-' + stat.id).value) || 0;
 
@@ -1470,6 +1665,7 @@
 
         // 最終ステータス = Math.ceil(基準値 * 倍率) + 系図 + 性格補正
         const finalStat = baseScaled + boost + corrVal;
+        finalValues[stat.id] = finalStat;
 
         // 各要素の更新
         const coeffElem = document.getElementById('coeff-' + stat.id);
@@ -1494,7 +1690,39 @@
         if (finalElem) finalElem.textContent = finalStat.toLocaleString();
       });
 
+      updateChartValues(finalValues);
       saveToLocalStorage();
+    }
+
+    function updateChartValues(finalStats) {
+      if (!finalStats) return;
+      ['hp', 'mp', 'wis', 'spd', 'def', 'atk'].forEach((statId) => {
+        const valEl = document.getElementById('radar-val-' + statId);
+        if (valEl) valEl.textContent = (finalStats[statId] || 0).toLocaleString();
+      });
+    }
+
+    function switchStatusTab(tabName) {
+      const tableBtn = document.getElementById('tab-btn-table');
+      const chartBtn = document.getElementById('tab-btn-chart');
+      const tableView = document.getElementById('stats-grid');
+      const chartView = document.getElementById('stats-chart-view');
+
+      if (tabName === 'chart') {
+        tableBtn.classList.remove('active');
+        chartBtn.classList.add('active');
+        tableView.style.display = 'none';
+        chartView.style.display = '';
+      } else {
+        chartBtn.classList.remove('active');
+        tableBtn.classList.add('active');
+        chartView.style.display = 'none';
+        tableView.style.display = '';
+      }
+
+      try {
+        localStorage.setItem('dqm3_status_tab', tabName);
+      } catch (e) { }
     }
 
     function saveToLocalStorage() {
@@ -1530,6 +1758,10 @@
             );
             if (targetRadio) targetRadio.checked = true;
           }
+        }
+        const savedTab = localStorage.getItem('dqm3_status_tab');
+        if (savedTab === 'chart') {
+          switchStatusTab('chart');
         }
       } catch (e) {
         // ignore
