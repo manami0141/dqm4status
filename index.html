@@ -60,8 +60,8 @@
     .grid-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 8px;
       align-items: start;
     }
 
@@ -77,6 +77,7 @@
       padding: 8px;
       border: 1px solid var(--border-color);
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      align-self: stretch;
     }
 
     /* 種族名一括入力セレクター */
@@ -248,9 +249,9 @@
     /* ステータス表示切り替えタブ */
     .status-tab-bar {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       margin-top: 0;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       background-color: var(--input-bg);
       padding: 4px;
       border-radius: 8px;
@@ -259,7 +260,7 @@
 
     .status-tab-btn {
       flex: 1;
-      padding: 7px 12px;
+      padding: 4px;
       background: transparent;
       border: none;
       border-radius: 6px;
@@ -270,7 +271,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 1px;
       transition: all 0.2s;
     }
 
@@ -433,17 +434,7 @@
 
     /* 家系図セクション */
     .family-section {
-      margin-bottom: 12px;
-    }
-
-    .family-section h3 {
-      margin-top: 0;
-      font-size: 0.84rem;
-      color: var(--highlight);
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin-bottom: 8px;
     }
 
     .grandparents-grid {
@@ -460,7 +451,6 @@
       display: block;
       font-size: 0.82rem;
       color: var(--text-sub);
-      margin-bottom: 3px;
     }
 
     /* 祖父母ボーナス表示バッジ */
@@ -488,18 +478,12 @@
       font-size: 0.82rem;
     }
 
-    .results-card {
-      margin-top: 8px;
-    }
-
     .table-wrapper {
       overflow-x: auto;
     }
 
     table {
-      width: 100%;
       border-collapse: collapse;
-      text-align: left;
     }
 
     /* 系統対応表・性格対応表はPCやタブレットで横に間延びしないようコンテンツ幅にフィット */
@@ -510,14 +494,13 @@
 
     .table-fit-content th,
     .table-fit-content td {
-      padding: 5px 14px;
+      padding: 4px 6px;
       white-space: nowrap;
     }
 
     th,
     td {
-      padding: 6px 6px;
-      border-bottom: 1px solid var(--border-color);
+      border: 1px solid var(--border-color);
       font-size: 0.8rem;
     }
 
@@ -534,7 +517,6 @@
 
     .stat-name {
       font-weight: normal;
-      font-size: 0.82rem;
       color: var(--text-main);
       white-space: nowrap;
     }
@@ -548,9 +530,8 @@
     }
 
     .circle-mark {
-      color: var(--highlight);
+      color: #34d399;
       font-weight: bold;
-      font-size: 0.95rem;
     }
 
     .dash-mark {
@@ -596,7 +577,7 @@
     }
 
     .info-box {
-      margin-top: 16px;
+      margin-top: 8px;
       background-color: rgba(59, 130, 246, 0.1);
       border-left: 4px solid var(--accent-color);
       padding: 12px 16px;
@@ -684,36 +665,9 @@
         font-size: 0.88rem;
       }
 
-      .size-toggle-box {
-        height: 34px;
-        flex: 0 0 auto;
-        min-width: 90px;
-        padding: 0 10px;
-        gap: 10px;
-      }
-
-      .status-tab-bar {
-        margin-top: 0;
-        margin-bottom: 10px;
-      }
-
       .status-tab-btn {
         padding: 6px 8px;
         font-size: 0.8rem;
-      }
-
-      .radar-chart-card {
-        padding: 6px 4px;
-        max-width: 260px;
-        border-radius: 10px;
-      }
-
-      .radar-label-name {
-        font-size: 14px;
-      }
-
-      .radar-label-val {
-        font-size: 19px;
       }
 
       .stats-table-grid {
@@ -802,7 +756,6 @@
         word-break: break-all !important;
         overflow-wrap: break-word !important;
         line-height: 1.18 !important;
-        font-size: 0.68rem !important;
         padding: 4px 2px !important;
         text-align: center !important;
       }
@@ -829,10 +782,6 @@
       .personality-minus,
       .personality-zero {
         font-size: 0.68rem !important;
-      }
-
-      .circle-mark {
-        font-size: 0.85rem !important;
       }
 
       .dash-mark {
@@ -1155,58 +1104,60 @@
         </div>
       </div>
     </div>
-
-    <!-- 系統ステータス対応表 -->
-    <div class="card results-card" id="matrix-card">
-      <div class="table-wrapper">
-        <table class="matrix-table table-fit-content">
-          <thead>
-            <tr>
-              <th>系統</th>
-              <th>HP</th>
-              <th>MP</th>
-              <th>攻撃</th>
-              <th>守備</th>
-              <th>素早</th>
-              <th>賢さ</th>
-            </tr>
-          </thead>
-          <tbody id="matrix-body">
-          </tbody>
-        </table>
+    <div class="grid-container">
+      <!-- 性格対応表 (+200の箇所は+100と一目でわかる特化スタイル) -->
+      <div class="card" id="personality-card">
+        <div class="table-wrapper">
+          <p style="font-size: 0.6rem; padding-left: 1rem;">行クリックで選択</p>
+          <table class="matrix-table table-fit-content">
+            <thead>
+              <tr>
+                <th>性格</th>
+                <th>HP</th>
+                <th>MP</th>
+                <th>攻撃</th>
+                <th>守備</th>
+                <th>素早</th>
+                <th>賢さ</th>
+              </tr>
+            </thead>
+            <tbody id="personality-matrix-body">
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- 性格対応表 (+200の箇所は+100と一目でわかる特化スタイル) -->
-    <div class="card results-card" id="personality-card">
-      <div class="table-wrapper">
-        <table class="matrix-table table-fit-content">
-          <thead>
-            <tr>
-              <th>性格</th>
-              <th>HP</th>
-              <th>MP</th>
-              <th>攻撃</th>
-              <th>守備</th>
-              <th>素早</th>
-              <th>賢さ</th>
-            </tr>
-          </thead>
-          <tbody id="personality-matrix-body">
-          </tbody>
-        </table>
+      <!-- 系統ステータス対応表 -->
+      <div class="card" id="matrix-card">
+        <div class="table-wrapper">
+          <table class="matrix-table table-fit-content">
+            <thead>
+              <tr>
+                <th>系統</th>
+                <th>HP</th>
+                <th>MP</th>
+                <th>攻撃</th>
+                <th>守備</th>
+                <th>素早</th>
+                <th>賢さ</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-body">
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- 捕捉 -->
     <div class="info-box">
-      <strong>捕捉:</strong>
+      <strong>捕捉</strong>
       <ul>
-        <li><strong>最終ステータス計算式:</strong> <code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
-        <li><strong>倍率計算:</strong> <code>特性倍率（AI行動/メタルボディ） × サイズ補正（S / L）</code></li>
-        <li><strong>系図計算式:</strong> <code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
-        <li><strong>祖父母ボーナス:</strong> 祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
-        <li>※入力内容はブラウザのローカルストレージへ自動保存されます。</li>
+        <li><strong>最終ステータス計算式</strong>：<code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
+        <li><strong>倍率計算式</strong>：<code>特性補正 × サイズ補正</code></li>
+        <li><strong>系図計算式</strong>：<code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
+        <li><strong>祖父母ボーナス</strong>：祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
+        <li>入力内容はブラウザのローカルストレージへ自動保存されます。</li>
       </ul>
     </div>
   </div>
