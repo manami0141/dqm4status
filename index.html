@@ -5,9 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DQM4 ステータス計算機</title>
-  <meta name="description" content="DQM4のステータス基準値、家系図（系図ボーナス）、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。" />
+  <meta name="description" content="DQM4のステータス基準値、家系図（親・祖父母）による系図ボーナス、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。種族名プリセットからの一括入力に対応。" />
   <meta property="og:title" content="DQM4 ステータス計算機" />
-  <meta property="og:description" content="DQM4のステータス基準値、家系図（系図ボーナス）、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。" />
+  <meta property="og:description" content="DQM4のステータス基準値、家系図（親・祖父母）による系図ボーナス、性格補正、AI行動特性・サイズ倍率を反映したステータス計算ツール。種族名プリセットからの一括入力に対応。" />
   <style>
     :root {
       --bg-color: #1a1e29;
@@ -75,9 +75,9 @@
     }
 
     .card h2 {
-      font-size: 1.15rem;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
       border-bottom: 2px solid var(--accent-color);
       display: flex;
       justify-content: space-between;
@@ -85,10 +85,49 @@
     }
 
     .card h2 .formula-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #93c5fd;
       font-weight: normal;
       font-family: monospace;
+    }
+
+    /* 種族名一括入力セレクター */
+    .monster-select-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background-color: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    .monster-select-bar label {
+      font-size: 0.84rem;
+      color: var(--highlight);
+      font-weight: bold;
+      width: 52px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-bottom: 0;
+    }
+
+    .monster-select-bar select {
+      flex: 1;
+      width: 100%;
+      padding: 7px 10px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .monster-select-bar select:focus {
+      outline: none;
+      border-color: var(--accent-color);
     }
 
     /* 2×2のグリッド配置 (プラス値・性格・サイズ・特性) - ラベルを左に配置 */
@@ -295,97 +334,7 @@
       font-family: monospace;
     }
 
-    @media (max-width: 650px) {
-      body {
-        padding: 8px 6px;
-      }
-      .card {
-        padding: 12px 8px;
-        border-radius: 10px;
-      }
-      .card h2 {
-        font-size: 1.05rem;
-        margin-bottom: 10px;
-      }
-      .config-grid-2x2 {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 8px;
-      }
-      .config-cell label {
-        width: 56px;
-        font-size: 0.82rem;
-      }
-      .config-cell input[type="number"],
-      .config-cell select {
-        height: 34px;
-        font-size: 0.88rem;
-      }
-      .size-toggle-box {
-        height: 34px;
-      }
-      .stats-table-grid {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .stats-row {
-        grid-template-columns: 32px minmax(44px, 1fr) 32px 42px 42px 52px;
-        gap: 3px;
-        font-size: 0.78rem;
-        padding: 4px 3px;
-      }
-      .stats-row label {
-        font-size: 0.8rem;
-      }
-      .stats-row input {
-        font-size: 0.82rem;
-        padding: 3px 2px;
-        height: 28px;
-        min-width: 0;
-      }
-      .stats-header-row {
-        font-size: 0.7rem;
-        padding: 3px 3px;
-      }
-      .col-coeff {
-        font-size: 0.76rem;
-      }
-      .col-boost {
-        font-size: 0.78rem;
-      }
-      .col-corr {
-        font-size: 0.76rem;
-      }
-      .corr-200 {
-        padding: 1px 2px;
-        font-size: 0.74rem;
-      }
-      .col-final {
-        font-size: 0.86rem;
-      }
-      .table-wrapper {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      th,
-      td {
-        padding: 6px 3px;
-        font-size: 0.75rem;
-      }
-      .personality-plus-200 {
-        padding: 1px 3px;
-        font-size: 0.74rem;
-      }
-      .info-box {
-        padding: 10px 12px;
-        font-size: 0.8rem;
-      }
-      .info-box ul {
-        margin-left: 16px;
-      }
-    }
+
 
     /* 家系図セクション */
     .family-section {
@@ -393,7 +342,7 @@
     }
 
     .family-section h3 {
-      font-size: 0.92rem;
+      font-size: 0.84rem;
       color: var(--highlight);
       margin-bottom: 6px;
       display: flex;
@@ -457,17 +406,30 @@
       text-align: left;
     }
 
+    /* 系統対応表・性格対応表はPCやタブレットで横に間延びしないようコンテンツ幅にフィット */
+    .table-fit-content {
+      width: auto !important;
+      max-width: 100%;
+    }
+
+    .table-fit-content th,
+    .table-fit-content td {
+      padding: 5px 14px;
+      white-space: nowrap;
+    }
+
     th,
     td {
-      padding: 8px 10px;
+      padding: 6px 6px;
       border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
     }
 
     th {
       background-color: var(--table-header);
       color: var(--text-sub);
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
     }
 
     tr:hover {
@@ -475,8 +437,10 @@
     }
 
     .stat-name {
-      font-weight: bold;
-      color: #ffffff;
+      font-weight: normal;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      white-space: nowrap;
     }
 
     .matrix-table {
@@ -490,12 +454,12 @@
     .circle-mark {
       color: var(--highlight);
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
     }
 
     .dash-mark {
       color: #4b5563;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     /* 性格対応表のスタイル (+200は+100と一目でわかるように特化デザイン) */
@@ -503,29 +467,31 @@
       background: var(--gold-bg);
       border: 1.5px solid var(--gold-border);
       color: var(--gold-text);
-      font-weight: 900;
-      padding: 2px 7px;
-      border-radius: 5px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 4px;
       display: inline-block;
-      box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
-      letter-spacing: 0.5px;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+      letter-spacing: 0px;
+      font-size: 0.76rem;
+      line-height: 1.2;
     }
 
     .personality-plus-100 {
       color: #34d399;
-      font-weight: 700;
-      font-size: 0.9rem;
+      font-weight: 600;
+      font-size: 0.76rem;
     }
 
     .personality-minus {
       color: #f87171;
-      font-weight: 600;
-      font-size: 0.9rem;
+      font-weight: 500;
+      font-size: 0.76rem;
     }
 
     .personality-zero {
       color: #6b7280;
-      font-size: 0.85rem;
+      font-size: 0.74rem;
     }
 
     .selected-row {
@@ -564,6 +530,165 @@
       font-family: monospace;
       word-break: break-word;
     }
+
+    /* スマートフォン・小型画面向け最適化 (横スクロール防止・1列目の文字を縦に折り返し) */
+    @media (max-width: 650px) {
+      body {
+        padding: 8px 6px;
+      }
+      .card {
+        padding: 12px 8px;
+        border-radius: 10px;
+      }
+      .card h2 {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+      }
+      .monster-select-bar {
+        padding: 8px;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .monster-select-bar label {
+        width: 56px;
+        font-size: 0.82rem;
+      }
+      .monster-select-bar select {
+        height: 34px;
+        font-size: 0.88rem;
+        padding: 4px 8px;
+      }
+      .config-grid-2x2 {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 8px;
+      }
+      .config-cell label {
+        width: 56px;
+        font-size: 0.82rem;
+      }
+      .config-cell input[type="number"],
+      .config-cell select {
+        height: 34px;
+        font-size: 0.88rem;
+      }
+      .size-toggle-box {
+        height: 34px;
+      }
+      .stats-table-grid {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .stats-row {
+        grid-template-columns: 32px minmax(44px, 1fr) 32px 42px 42px 52px;
+        gap: 3px;
+        font-size: 0.78rem;
+        padding: 4px 3px;
+      }
+      .stats-row label {
+        font-size: 0.8rem;
+      }
+      .stats-row input {
+        font-size: 0.82rem;
+        padding: 3px 2px;
+        height: 28px;
+        min-width: 0;
+      }
+      .stats-header-row {
+        font-size: 0.7rem;
+        padding: 3px 3px;
+      }
+      .col-coeff {
+        font-size: 0.76rem;
+      }
+      .col-boost {
+        font-size: 0.78rem;
+      }
+      .col-corr {
+        font-size: 0.76rem;
+      }
+      .corr-200 {
+        padding: 1px 2px;
+        font-size: 0.74rem;
+      }
+      .col-final {
+        font-size: 0.86rem;
+      }
+
+      /* 対応表: 横スクロール不要で1画面内に完全収容 */
+      .table-wrapper {
+        width: 100%;
+        display: block;
+        overflow-x: hidden;
+      }
+      .matrix-table,
+      .table-fit-content {
+        table-layout: fixed;
+        width: 100% !important;
+        min-width: 0;
+      }
+      .matrix-table th,
+      .matrix-table td,
+      .table-fit-content th,
+      .table-fit-content td {
+        padding: 4px 1px !important;
+        font-size: 0.68rem !important;
+        letter-spacing: -0.3px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      /* 1列目 (系統・性格): 縦に折り返してコンパクトに表示 */
+      .matrix-table th:first-child,
+      .matrix-table td:first-child,
+      .matrix-table .stat-name,
+      .stat-name {
+        width: 52px !important;
+        max-width: 52px !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+        overflow-wrap: break-word !important;
+        line-height: 1.18 !important;
+        font-size: 0.68rem !important;
+        padding: 4px 2px !important;
+        text-align: center !important;
+      }
+      /* 2〜7列目 (HP, MP, 攻撃, 守備, 素早, 賢さ): 均等配分で表示 */
+      .matrix-table th:not(:first-child),
+      .matrix-table td:not(:first-child),
+      .table-fit-content th:not(:first-child),
+      .table-fit-content td:not(:first-child) {
+        width: calc((100% - 52px) / 6) !important;
+        max-width: calc((100% - 52px) / 6) !important;
+        white-space: nowrap !important;
+        padding: 4px 0 !important;
+      }
+      .personality-plus-200 {
+        padding: 1px 2px !important;
+        font-size: 0.64rem !important;
+        letter-spacing: -0.5px !important;
+        border-width: 1px !important;
+      }
+      .personality-plus-100,
+      .personality-minus,
+      .personality-zero {
+        font-size: 0.68rem !important;
+      }
+      .circle-mark {
+        font-size: 0.85rem !important;
+      }
+      .dash-mark {
+        font-size: 0.75rem !important;
+      }
+      .info-box {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+      }
+      .info-box ul {
+        margin-left: 16px;
+      }
+    }
   </style>
 </head>
 
@@ -573,6 +698,14 @@
       <!-- ステータス設定カード -->
       <div class="card" id="status-card">
         <h2>ステータス設定</h2>
+
+        <!-- 種族選択 (ステータス一括入力) -->
+        <div class="monster-select-bar">
+          <label for="monster-select">種族名</label>
+          <select id="monster-select">
+            <option value="">-- 種族を選択して基準値を一括入力 --</option>
+          </select>
+        </div>
 
         <!-- プラス値・性格・サイズ・特性の入力欄を2×2のグリッドで整列 (ラベルは左) -->
         <div class="config-grid-2x2" id="config-grid">
@@ -815,7 +948,7 @@
     <div class="card results-card" id="matrix-card">
       <h2>系統対応表</h2>
       <div class="table-wrapper">
-        <table class="matrix-table">
+        <table class="matrix-table table-fit-content">
           <thead>
             <tr>
               <th>系統</th>
@@ -842,7 +975,7 @@
         </span>
       </h2>
       <div class="table-wrapper">
-        <table class="matrix-table">
+        <table class="matrix-table table-fit-content">
           <thead>
             <tr>
               <th>性格</th>
@@ -944,7 +1077,169 @@
       { id: 'wis', name: '賢さ' },
     ];
 
+    // 種族別ステータス基準値 & S/L別行動回数データ (全157種族)
+    const monsterData = {
+      'アイアンタートル': { hp: 1380, mp: 560, atk: 430, def: 800, spd: 300, wis: 660, sAction: '1', lAction: '1-2' },
+      'あおバチ騎兵': { hp: 1390, mp: 360, atk: 550, def: 510, spd: 530, wis: 410, sAction: '1', lAction: '1-3' },
+      'アカリリス': { hp: 1370, mp: 380, atk: 530, def: 390, spd: 590, wis: 510, sAction: '1', lAction: '1-3' },
+      'アクアスライム': { hp: 1390, mp: 410, atk: 460, def: 460, spd: 570, wis: 510, sAction: '1', lAction: '2' },
+      'あくまのツボ': { hp: 1350, mp: 470, atk: 500, def: 590, spd: 480, wis: 580, sAction: '1', lAction: '2' },
+      'アニマルゾンビ': { hp: 1400, mp: 500, atk: 620, def: 400, spd: 480, wis: 300, sAction: '1', lAction: '2' },
+      'あばれうしどり': { hp: 1330, mp: 390, atk: 620, def: 550, spd: 510, wis: 480, sAction: '1', lAction: '1-3' },
+      'あばれこまいぬ': { hp: 1370, mp: 400, atk: 570, def: 470, spd: 480, wis: 550, sAction: '1', lAction: '1-3' },
+      'アントベア': { hp: 1390, mp: 450, atk: 610, def: 380, spd: 470, wis: 450, sAction: '1', lAction: '1-3' },
+      'イエティ': { hp: 1360, mp: 290, atk: 600, def: 570, spd: 540, wis: 420, sAction: '1', lAction: '2' },
+      'いたずらもぐら': { hp: 1330, mp: 360, atk: 630, def: 580, spd: 540, wis: 400, sAction: '1', lAction: '1-3' },
+      'いっかくうさぎ': { hp: 1300, mp: 380, atk: 570, def: 470, spd: 670, wis: 470, sAction: '1', lAction: '1-3' },
+      'いっかく竜': { hp: 1410, mp: 290, atk: 640, def: 540, spd: 480, wis: 290, sAction: '1', lAction: '1-3' },
+      'いばらドラゴン': { hp: 1370, mp: 360, atk: 570, def: 610, spd: 530, wis: 350, sAction: '1', lAction: '1-3' },
+      'インプ': { hp: 1350, mp: 460, atk: 470, def: 410, spd: 600, wis: 590, sAction: '1', lAction: '1-3' },
+      'ウィングスネーク': { hp: 1360, mp: 310, atk: 540, def: 360, spd: 680, wis: 450, sAction: '1', lAction: '1-3' },
+      'おおがらす': { hp: 1310, mp: 420, atk: 560, def: 590, spd: 570, wis: 490, sAction: '1', lAction: '1-3' },
+      'おおきづち': { hp: 1450, mp: 300, atk: 630, def: 570, spd: 390, wis: 290, sAction: '1', lAction: '2' },
+      'オーク': { hp: 1350, mp: 380, atk: 570, def: 500, spd: 510, wis: 560, sAction: '1', lAction: '2' },
+      'おおさそり': { hp: 1350, mp: 340, atk: 630, def: 650, spd: 480, wis: 390, sAction: '1', lAction: '1-3' },
+      'おおにわとり': { hp: 1280, mp: 360, atk: 540, def: 460, spd: 690, wis: 600, sAction: '1', lAction: '2-3' },
+      'おおねずみ': { hp: 1360, mp: 350, atk: 580, def: 490, spd: 560, wis: 440, sAction: '1', lAction: '1-3' },
+      'おおめだま': { hp: 1350, mp: 440, atk: 560, def: 520, spd: 520, wis: 480, sAction: '1', lAction: '1-3' },
+      'オクトリーチ': { hp: 1410, mp: 420, atk: 600, def: 410, spd: 450, wis: 430, sAction: '1', lAction: '1-3' },
+      'オニオーン': { hp: 1400, mp: 620, atk: 490, def: 460, spd: 340, wis: 660, sAction: '1', lAction: '1-3' },
+      'おばけキノコ': { hp: 1350, mp: 430, atk: 580, def: 590, spd: 500, wis: 420, sAction: '1', lAction: '2-3' },
+      'おばけキャンドル': { hp: 1390, mp: 400, atk: 480, def: 610, spd: 490, wis: 490, sAction: '1', lAction: '1-3' },
+      'おばけヒトデ': { hp: 1420, mp: 330, atk: 430, def: 520, spd: 510, wis: 390, sAction: '1', lAction: '1-3' },
+      'がいこつ': { hp: 1420, mp: 290, atk: 610, def: 510, spd: 430, wis: 440, sAction: '1', lAction: '2' },
+      'ガップリン': { hp: 1390, mp: 410, atk: 540, def: 470, spd: 510, wis: 460, sAction: '1', lAction: '1-3' },
+      'カバシラー': { hp: 1300, mp: 450, atk: 540, def: 430, spd: 690, wis: 460, sAction: '1', lAction: '2-3' },
+      'かまいたち': { hp: 1320, mp: 570, atk: 590, def: 480, spd: 510, wis: 470, sAction: '1', lAction: '1-3' },
+      'からくりエッグ': { hp: 1380, mp: 400, atk: 570, def: 540, spd: 510, wis: 380, sAction: '1', lAction: '1-3' },
+      'ギズモ': { hp: 1360, mp: 430, atk: 570, def: 350, spd: 510, wis: 620, sAction: '1', lAction: '2' },
+      'ギャオース': { hp: 1350, mp: 320, atk: 690, def: 620, spd: 440, wis: 400, sAction: '1', lAction: '1-3' },
+      'キャタピラー': { hp: 1340, mp: 400, atk: 590, def: 570, spd: 500, wis: 490, sAction: '1', lAction: '1-3' },
+      'キャットフライ': { hp: 1310, mp: 430, atk: 450, def: 430, spd: 700, wis: 600, sAction: '1', lAction: '1-3' },
+      'キラーコーン': { hp: 1300, mp: 550, atk: 610, def: 380, spd: 610, wis: 430, sAction: '1', lAction: '2-3' },
+      'きりかぶおばけ': { hp: 1370, mp: 460, atk: 580, def: 590, spd: 460, wis: 390, sAction: '1', lAction: '2' },
+      'くさった死体': { hp: 1420, mp: 360, atk: 620, def: 530, spd: 400, wis: 390, sAction: '1', lAction: '2' },
+      'くしざしツインズ': { hp: 1370, mp: 440, atk: 570, def: 480, spd: 490, wis: 480, sAction: '1', lAction: '1-3' },
+      'くびながイタチ': { hp: 1380, mp: 370, atk: 510, def: 470, spd: 580, wis: 460, sAction: '1', lAction: '2' },
+      'くみひもこぞう': { hp: 1340, mp: 420, atk: 580, def: 390, spd: 550, wis: 570, sAction: '1', lAction: '1-3' },
+      'くらやみハーピー': { hp: 1320, mp: 500, atk: 510, def: 390, spd: 610, wis: 590, sAction: '1', lAction: '1-3' },
+      'グレムリン': { hp: 1370, mp: 650, atk: 450, def: 290, spd: 520, wis: 640, sAction: '1', lAction: '1-3' },
+      'クロコマーチ': { hp: 1400, mp: 610, atk: 600, def: 280, spd: 460, wis: 390, sAction: '1', lAction: '1-3' },
+      'ぐんたいガニ': { hp: 1340, mp: 320, atk: 570, def: 720, spd: 520, wis: 420, sAction: '1', lAction: '1-2' },
+      'ゴースト': { hp: 1350, mp: 640, atk: 480, def: 270, spd: 570, wis: 590, sAction: '1', lAction: '2' },
+      'ゴールドマン': { hp: 1400, mp: 420, atk: 520, def: 580, spd: 380, wis: 600, sAction: '1', lAction: '2' },
+      'コドラ': { hp: 1360, mp: 320, atk: 640, def: 490, spd: 590, wis: 290, sAction: '1', lAction: '1-3' },
+      'サボテンボール': { hp: 1400, mp: 330, atk: 570, def: 520, spd: 490, wis: 430, sAction: '1', lAction: '1-3' },
+      'さまようよろい': { hp: 1340, mp: 370, atk: 560, def: 680, spd: 490, wis: 490, sAction: '1', lAction: '1-3' },
+      'さんぞくウルフ': { hp: 1320, mp: 360, atk: 550, def: 470, spd: 630, wis: 530, sAction: '1', lAction: '2' },
+      'シーメーダ': { hp: 1330, mp: 580, atk: 370, def: 360, spd: 690, wis: 620, sAction: '1', lAction: '1-3' },
+      'しましまキャット': { hp: 1360, mp: 480, atk: 560, def: 510, spd: 480, wis: 490, sAction: '1', lAction: '1-3' },
+      'シャドー': { hp: 1290, mp: 440, atk: 480, def: 490, spd: 670, wis: 610, sAction: '1', lAction: '1-3' },
+      'ジャングラー': { hp: 1390, mp: 310, atk: 690, def: 380, spd: 460, wis: 450, sAction: '1', lAction: '1-3' },
+      'ジャンボドラキー': { hp: 1430, mp: 430, atk: 530, def: 560, spd: 310, wis: 610, sAction: '1', lAction: '2-3' },
+      'スカイドラゴン': { hp: 1360, mp: 320, atk: 600, def: 530, spd: 530, wis: 450, sAction: '1', lAction: '1-3' },
+      'スカルガルー': { hp: 1370, mp: 450, atk: 630, def: 380, spd: 450, wis: 530, sAction: '1', lAction: '1-3' },
+      'スカルライダー': { hp: 1400, mp: 430, atk: 520, def: 370, spd: 480, wis: 600, sAction: '1-2', lAction: '1-2' },
+      'スキッパー': { hp: 1340, mp: 380, atk: 560, def: 630, spd: 530, wis: 450, sAction: '1', lAction: '1-3' },
+      'ズッキーニャ': { hp: 1330, mp: 460, atk: 590, def: 560, spd: 490, wis: 500, sAction: '1', lAction: '1-3' },
+      'スノーム': { hp: 1390, mp: 480, atk: 510, def: 580, spd: 390, wis: 580, sAction: '1', lAction: '1-3' },
+      'スマイルリザード': { hp: 1430, mp: 360, atk: 460, def: 350, spd: 630, wis: 390, sAction: '1', lAction: '2' },
+      'スモーク': { hp: 1290, mp: 450, atk: 540, def: 580, spd: 590, wis: 550, sAction: '1', lAction: '1-3' },
+      'スライム': { hp: 1420, mp: 410, atk: 460, def: 380, spd: 650, wis: 310, sAction: '1', lAction: '1-3' },
+      'スライムカルゴ': { hp: 1410, mp: 470, atk: 480, def: 820, spd: 240, wis: 630, sAction: '1', lAction: '1-3' },
+      'スライムコロネ': { hp: 1390, mp: 460, atk: 560, def: 420, spd: 440, wis: 560, sAction: '1', lAction: '1-3' },
+      'スライムつむり': { hp: 1430, mp: 520, atk: 400, def: 840, spd: 300, wis: 520, sAction: '1', lAction: '1-2' },
+      'スライムツリー': { hp: 1360, mp: 550, atk: 520, def: 320, spd: 490, wis: 670, sAction: '1', lAction: '1-3' },
+      'スライムナイト': { hp: 1330, mp: 420, atk: 580, def: 590, spd: 480, wis: 550, sAction: '1-2', lAction: '1-2' },
+      'スライムベス': { hp: 1490, mp: 400, atk: 510, def: 360, spd: 490, wis: 280, sAction: '1', lAction: '2-3' },
+      'ソルジャーブル': { hp: 1360, mp: 330, atk: 640, def: 530, spd: 510, wis: 400, sAction: '1', lAction: '1-3' },
+      'たけやりへい': { hp: 1400, mp: 310, atk: 580, def: 500, spd: 510, wis: 410, sAction: '1', lAction: '1-3' },
+      'ダッシュラン': { hp: 1340, mp: 340, atk: 620, def: 480, spd: 640, wis: 300, sAction: '1', lAction: '1-3' },
+      'タマゴロン': { hp: 1410, mp: 410, atk: 480, def: 580, spd: 480, wis: 450, sAction: '1', lAction: '2' },
+      'たまねぎスライム': { hp: 1410, mp: 430, atk: 510, def: 530, spd: 570, wis: 240, sAction: '1', lAction: '1-3' },
+      'ちゅうまじゅう': { hp: 1420, mp: 320, atk: 580, def: 570, spd: 430, wis: 410, sAction: '1', lAction: '1-3' },
+      'チンチロむし': { hp: 1300, mp: 440, atk: 500, def: 410, spd: 680, wis: 590, sAction: '1', lAction: '2-3' },
+      'テールイーター': { hp: 1410, mp: 530, atk: 580, def: 360, spd: 410, wis: 490, sAction: '1', lAction: '1-3' },
+      'デザートデーモン': { hp: 1370, mp: 380, atk: 600, def: 500, spd: 460, wis: 520, sAction: '1', lAction: '1-3' },
+      'デビルパイン': { hp: 1370, mp: 330, atk: 580, def: 540, spd: 530, wis: 430, sAction: '1', lAction: '2-3' },
+      'デンデン竜': { hp: 1400, mp: 310, atk: 650, def: 590, spd: 430, wis: 340, sAction: '1', lAction: '1-3' },
+      'とけぼうず': { hp: 1410, mp: 340, atk: 490, def: 540, spd: 480, wis: 540, sAction: '1', lAction: '1-3' },
+      'とさかへび': { hp: 1310, mp: 290, atk: 640, def: 460, spd: 640, wis: 450, sAction: '1', lAction: '1-3' },
+      'とらおとこ': { hp: 1350, mp: 340, atk: 590, def: 620, spd: 480, wis: 500, sAction: '1', lAction: '2-3' },
+      'ドラキー': { hp: 1260, mp: 490, atk: 480, def: 440, spd: 780, wis: 510, sAction: '1', lAction: '2' },
+      'ドラゴスライム': { hp: 1380, mp: 460, atk: 540, def: 380, spd: 580, wis: 400, sAction: '1', lAction: '1-3' },
+      'ドラゴンキッズ': { hp: 1450, mp: 470, atk: 530, def: 340, spd: 510, wis: 310, sAction: '1', lAction: '1-3' },
+      'ドラムゴート': { hp: 1400, mp: 460, atk: 610, def: 450, spd: 410, wis: 450, sAction: '1', lAction: '1-3' },
+      'ドルイド': { hp: 1340, mp: 510, atk: 410, def: 590, spd: 520, wis: 680, sAction: '1', lAction: '1-3' },
+      'トルトリーナ': { hp: 1330, mp: 470, atk: 580, def: 430, spd: 630, wis: 360, sAction: '1', lAction: '2' },
+      'ドロザラー': { hp: 1390, mp: 540, atk: 490, def: 540, spd: 430, wis: 520, sAction: '1', lAction: '1-3' },
+      'どろにんぎょう': { hp: 1380, mp: 460, atk: 610, def: 540, spd: 480, wis: 300, sAction: '1', lAction: '1-3' },
+      'ドロヌーバ': { hp: 1380, mp: 530, atk: 600, def: 590, spd: 310, wis: 540, sAction: '1', lAction: '1-3' },
+      'トロピカルスライム': { hp: 1400, mp: 380, atk: 470, def: 510, spd: 510, wis: 550, sAction: '1', lAction: '2-3' },
+      'ドロル': { hp: 1350, mp: 420, atk: 540, def: 500, spd: 590, wis: 420, sAction: '1', lAction: '2' },
+      'どんぐりベビー': { hp: 1420, mp: 450, atk: 590, def: 560, spd: 360, wis: 410, sAction: '1', lAction: '1-3' },
+      'ナイトウイプス': { hp: 1330, mp: 490, atk: 550, def: 410, spd: 530, wis: 620, sAction: '1', lAction: '1-3' },
+      'ナスビナーラ': { hp: 1360, mp: 610, atk: 490, def: 440, spd: 480, wis: 570, sAction: '1', lAction: '2' },
+      'ぬすっとウサギ': { hp: 1340, mp: 350, atk: 610, def: 430, spd: 590, wis: 460, sAction: '1', lAction: '2' },
+      'パールスライム': { hp: 1390, mp: 410, atk: 460, def: 610, spd: 470, wis: 560, sAction: '1', lAction: '1-3' },
+      'はなカワセミ': { hp: 1320, mp: 430, atk: 520, def: 540, spd: 620, wis: 470, sAction: '1', lAction: '1-3' },
+      'はなまきドラゴ': { hp: 1380, mp: 570, atk: 630, def: 370, spd: 450, wis: 380, sAction: '1', lAction: '1-3' },
+      'はねスライム': { hp: 1320, mp: 490, atk: 520, def: 360, spd: 640, wis: 550, sAction: '1', lAction: '2' },
+      'バブルスライム': { hp: 1440, mp: 660, atk: 460, def: 500, spd: 410, wis: 340, sAction: '1', lAction: '1-3' },
+      'はりつきあくま': { hp: 1360, mp: 470, atk: 460, def: 450, spd: 550, wis: 620, sAction: '1', lAction: '1-3' },
+      'ピクシードラゴン': { hp: 1320, mp: 440, atk: 490, def: 460, spd: 620, wis: 600, sAction: '1', lAction: '1-3' },
+      'ピッキー': { hp: 1320, mp: 550, atk: 590, def: 340, spd: 580, wis: 490, sAction: '1', lAction: '1-3' },
+      'ビッグハット': { hp: 1360, mp: 410, atk: 470, def: 630, spd: 490, wis: 600, sAction: '1', lAction: '1-3' },
+      'ビッグモアイ': { hp: 1400, mp: 410, atk: 560, def: 600, spd: 320, wis: 630, sAction: '1', lAction: '1-3' },
+      'びっくりサタン': { hp: 1360, mp: 460, atk: 410, def: 560, spd: 570, wis: 580, sAction: '1', lAction: '1-3' },
+      'ひとくいサーベル': { hp: 1330, mp: 360, atk: 600, def: 510, spd: 580, wis: 450, sAction: '1', lAction: '1-3' },
+      'ひとくいばこ': { hp: 1380, mp: 280, atk: 640, def: 590, spd: 450, wis: 430, sAction: '1', lAction: '1-3' },
+      'ファーラット': { hp: 1420, mp: 570, atk: 470, def: 420, spd: 390, wis: 610, sAction: '1', lAction: '1-3' },
+      'フーセンドラゴン': { hp: 1420, mp: 320, atk: 590, def: 590, spd: 410, wis: 410, sAction: '1', lAction: '1-2' },
+      'フェアリードラゴン': { hp: 1320, mp: 450, atk: 460, def: 250, spd: 800, wis: 500, sAction: '1', lAction: '1-3' },
+      'フォンデュ': { hp: 1390, mp: 480, atk: 500, def: 400, spd: 490, wis: 580, sAction: '1', lAction: '1-3' },
+      'プチアーノン': { hp: 1400, mp: 520, atk: 530, def: 460, spd: 400, wis: 560, sAction: '1', lAction: '1-3' },
+      'ぶちスライム': { hp: 1420, mp: 460, atk: 510, def: 450, spd: 510, wis: 370, sAction: '1', lAction: '1-3' },
+      'プテラノドン': { hp: 1370, mp: 360, atk: 580, def: 350, spd: 620, wis: 410, sAction: '1', lAction: '1-3' },
+      'ふゆうじゅ': { hp: 1440, mp: 430, atk: 580, def: 370, spd: 410, wis: 460, sAction: '1', lAction: '2' },
+      'フロッガー': { hp: 1410, mp: 360, atk: 560, def: 450, spd: 520, wis: 390, sAction: '1', lAction: '2' },
+      'ベビークラウド': { hp: 1370, mp: 320, atk: 580, def: 440, spd: 600, wis: 400, sAction: '1', lAction: '2' },
+      'ベビーサタン': { hp: 1300, mp: 310, atk: 570, def: 530, spd: 570, wis: 680, sAction: '1', lAction: '1-3' },
+      'ベビーパンサー': { hp: 1400, mp: 310, atk: 550, def: 550, spd: 570, wis: 300, sAction: '1', lAction: '1-3' },
+      'ポイズンリザード': { hp: 1380, mp: 430, atk: 610, def: 460, spd: 420, wis: 530, sAction: '1', lAction: '1-3' },
+      'ホイップゴースト': { hp: 1420, mp: 490, atk: 440, def: 540, spd: 460, wis: 490, sAction: '1', lAction: '1-3' },
+      'ホイミスライム': { hp: 1320, mp: 620, atk: 330, def: 420, spd: 660, wis: 700, sAction: '1', lAction: '2' },
+      'ボックススライム': { hp: 1420, mp: 640, atk: 450, def: 610, spd: 280, wis: 610, sAction: '1', lAction: '1-3' },
+      'ポンポコだぬき': { hp: 1350, mp: 350, atk: 580, def: 600, spd: 530, wis: 430, sAction: '1', lAction: '1-3' },
+      'マーマン': { hp: 1350, mp: 380, atk: 570, def: 600, spd: 530, wis: 420, sAction: '1', lAction: '2' },
+      'マグマスライム': { hp: 1350, mp: 410, atk: 530, def: 460, spd: 540, wis: 590, sAction: '1', lAction: '1-3' },
+      'マドハンド': { hp: 1420, mp: 550, atk: 560, def: 400, spd: 430, wis: 390, sAction: '1', lAction: '1-3' },
+      'まほうつかい': { hp: 1360, mp: 530, atk: 430, def: 440, spd: 550, wis: 630, sAction: '1', lAction: '1-3' },
+      'マンドラ': { hp: 1370, mp: 490, atk: 520, def: 450, spd: 520, wis: 500, sAction: '1', lAction: '1-3' },
+      'ミイラおとこ': { hp: 1400, mp: 420, atk: 580, def: 580, spd: 450, wis: 340, sAction: '1', lAction: '1-3' },
+      'ミステリドール': { hp: 1340, mp: 500, atk: 500, def: 550, spd: 490, wis: 610, sAction: '1', lAction: '1-3' },
+      'むくろカサゴ': { hp: 1430, mp: 440, atk: 570, def: 380, spd: 380, wis: 600, sAction: '1', lAction: '1-3' },
+      'メーダ': { hp: 1400, mp: 450, atk: 530, def: 400, spd: 460, wis: 570, sAction: '1', lAction: '1-3' },
+      'メソコボルト': { hp: 1360, mp: 390, atk: 520, def: 440, spd: 560, wis: 570, sAction: '1', lAction: '2-3' },
+      'メタッピー': { hp: 1400, mp: 490, atk: 470, def: 730, spd: 440, wis: 360, sAction: '1', lAction: '1-3' },
+      'メタルハンター': { hp: 1350, mp: 300, atk: 680, def: 540, spd: 520, wis: 360, sAction: '1-2', lAction: '1-2' },
+      'メラゴースト': { hp: 1400, mp: 520, atk: 350, def: 580, spd: 480, wis: 640, sAction: '1', lAction: '1-3' },
+      'モーモン': { hp: 1300, mp: 550, atk: 410, def: 440, spd: 700, wis: 590, sAction: '1', lAction: '1-3' },
+      'もみじこぞう': { hp: 1350, mp: 660, atk: 520, def: 330, spd: 610, wis: 350, sAction: '1', lAction: '1-3' },
+      'ももんじゃ': { hp: 1370, mp: 380, atk: 580, def: 620, spd: 520, wis: 320, sAction: '1', lAction: '1-3' },
+      'やみしばり': { hp: 1340, mp: 440, atk: 550, def: 430, spd: 530, wis: 610, sAction: '1', lAction: '1-3' },
+      'ゆめにゅうどう': { hp: 1390, mp: 460, atk: 460, def: 420, spd: 510, wis: 620, sAction: '1', lAction: '1-3' },
+      'ランタンこぞう': { hp: 1370, mp: 460, atk: 520, def: 590, spd: 430, wis: 570, sAction: '1', lAction: '1-3' },
+      'ランドセーラー': { hp: 1370, mp: 430, atk: 690, def: 410, spd: 460, wis: 380, sAction: '1', lAction: '1-3' },
+      'リップス': { hp: 1430, mp: 630, atk: 490, def: 530, spd: 370, wis: 400, sAction: '1', lAction: '1-3' },
+      'リリパット': { hp: 1460, mp: 470, atk: 480, def: 500, spd: 460, wis: 310, sAction: '1', lAction: '2' },
+      'わかめ王子': { hp: 1280, mp: 540, atk: 580, def: 520, spd: 510, wis: 640, sAction: '1', lAction: '1-3' },
+      'ワンワンダック': { hp: 1370, mp: 320, atk: 590, def: 520, spd: 550, wis: 400, sAction: '1', lAction: '1-3' },
+      '毒つぼドラゴン': { hp: 1380, mp: 340, atk: 690, def: 370, spd: 490, wis: 410, sAction: '1', lAction: '1-3' },
+    };
+
     const inputIds = [
+      'monster-select',
       'plus',
       'personality',
       'ai',
@@ -961,6 +1256,72 @@
       'grandparent3',
       'grandparent4',
     ];
+
+    // 種族プルダウンの生成
+    function populateMonsterSelect() {
+      const select = document.getElementById('monster-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 種族を選択して基準値を一括入力 --</option>';
+      Object.keys(monsterData).forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
+
+    // 種族データからステータスおよび特性（行動回数）を一括反映
+    function applyMonsterStats(name) {
+      if (!name || !monsterData[name]) return;
+      const m = monsterData[name];
+      document.getElementById('stat-hp').value = m.hp;
+      document.getElementById('stat-mp').value = m.mp;
+      document.getElementById('stat-atk').value = m.atk;
+      document.getElementById('stat-def').value = m.def;
+      document.getElementById('stat-spd').value = m.spd;
+      document.getElementById('stat-wis').value = m.wis;
+
+      // 現在のサイズに合わせて行動回数特性も自動連動
+      const sizeRadio = document.querySelector('input[name="size"]:checked');
+      const size = sizeRadio ? sizeRadio.value : 'S';
+      const targetAction = size === 'L' ? m.lAction : m.sAction;
+      if (targetAction) {
+        document.getElementById('ai').value = targetAction;
+      }
+    }
+
+    // サイズ切替時に種族が選ばれていれば特性（行動回数）を自動更新
+    function onSizeChange() {
+      const selectedMonster = document.getElementById('monster-select')?.value;
+      if (selectedMonster && monsterData[selectedMonster]) {
+        const m = monsterData[selectedMonster];
+        const sizeRadio = document.querySelector('input[name="size"]:checked');
+        const size = sizeRadio ? sizeRadio.value : 'S';
+        const targetAction = size === 'L' ? m.lAction : m.sAction;
+        const aiSelect = document.getElementById('ai');
+        // メタルボディ等の特殊カスタマイズでない場合は種族デフォルトの行動回数に追従
+        if (aiSelect && targetAction && !aiSelect.value.includes('metal')) {
+          aiSelect.value = targetAction;
+        }
+      }
+    }
+
+    // 手動でステータス値を変更した際、現在の種族データと食い違った場合は種族プルダウンをクリア
+    function checkMonsterStatsSync() {
+      const select = document.getElementById('monster-select');
+      if (!select || !select.value) return;
+      const m = monsterData[select.value];
+      if (!m) return;
+      const hp = Number(document.getElementById('stat-hp').value);
+      const mp = Number(document.getElementById('stat-mp').value);
+      const atk = Number(document.getElementById('stat-atk').value);
+      const def = Number(document.getElementById('stat-def').value);
+      const spd = Number(document.getElementById('stat-spd').value);
+      const wis = Number(document.getElementById('stat-wis').value);
+      if (hp !== m.hp || mp !== m.mp || atk !== m.atk || def !== m.def || spd !== m.spd || wis !== m.wis) {
+        select.value = '';
+      }
+    }
 
     function renderMatrixTable() {
       const tbody = document.getElementById('matrix-body');
@@ -1157,19 +1518,45 @@
     }
 
     function initApp() {
+      populateMonsterSelect();
       loadFromLocalStorage();
       renderMatrixTable();
       renderPersonalityTable();
       calculate();
 
+      // 種族選択変更時のイベント
+      const mSelect = document.getElementById('monster-select');
+      if (mSelect) {
+        mSelect.addEventListener('change', () => {
+          applyMonsterStats(mSelect.value);
+          calculate();
+        });
+      }
+
+      // サイズラジオ変更時に行動回数を自動更新
+      document.querySelectorAll('input[name="size"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+          onSizeChange();
+          calculate();
+        });
+      });
+
+      // 全入力・選択項目のイベント
       document.querySelectorAll('input, select').forEach((elem) => {
+        if (elem.name === 'size' || elem.id === 'monster-select') return;
         elem.addEventListener('input', () => {
+          if (elem.id.startsWith('stat-')) {
+            checkMonsterStatsSync();
+          }
           calculate();
           if (elem.id === 'personality') {
             renderPersonalityTable();
           }
         });
         elem.addEventListener('change', () => {
+          if (elem.id.startsWith('stat-')) {
+            checkMonsterStatsSync();
+          }
           calculate();
           if (elem.id === 'personality') {
             renderPersonalityTable();
