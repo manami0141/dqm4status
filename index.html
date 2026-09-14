@@ -3,28 +3,32 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>DQM4 ステータス計算機</title>
-  <meta name="description" content="DQM4のステータス計算器" />
+  <meta name="description" content="DQM4のステータス計算機" />
   <meta property="og:title" content="DQM4 ステータス計算機" />
-  <meta property="og:description" content="DQM4のステータス計算器" />
+  <meta property="og:description" content="DQM4のステータス計算機" />
   <style>
     :root {
-      --bg-color: #1a1e29;
-      --card-bg: #242936;
-      --card-inner: #1a202c;
-      --accent-color: #3b82f6;
-      --accent-hover: #2563eb;
-      --text-main: #f3f4f6;
-      --text-sub: #9ca3af;
-      --border-color: #374151;
-      --input-bg: #111827;
-      --table-header: #1f2937;
-      --table-hover: #2d3748;
+      --bg-color: #0b0f17;
+      --card-bg: #151a24;
+      --card-inner: #1a2230;
+      --accent-color: #2563eb;
+      --accent-hover: #3b82f6;
+      --accent-glow: rgba(37, 99, 235, 0.25);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: #283347;
+      --border-light: #334155;
+      --input-bg: #0f141f;
       --highlight: #60a5fa;
-      --gold-bg: rgba(245, 158, 11, 0.2);
+      --gold-bg: rgba(245, 158, 11, 0.15);
       --gold-border: #f59e0b;
       --gold-text: #fde68a;
+      --green-text: #34d399;
+      --green-bg: rgba(52, 211, 153, 0.12);
+      --red-text: #f87171;
     }
 
     * {
@@ -35,148 +39,118 @@
 
     html,
     body {
+      width: 100%;
       max-width: 100vw;
       overflow-x: hidden;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      padding: 8px;
-      line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      line-height: 1.35;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 1040px;
-      margin: 0 auto;
+    /* PCコンテナ: 画面の高さにぴったり収まる高密度設計 (縦スクロール不要) */
+    .app-container {
       width: 100%;
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 6px 8px;
     }
 
-    .monster-card {
-      margin-bottom: 8px;
-    }
+    @media (min-width: 900px) {
 
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: start;
-    }
+      html,
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
 
-    @media (max-width: 860px) {
-      .grid-container {
-        grid-template-columns: 1fr;
+      .app-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 6px 10px 4px;
+        overflow-y: auto;
       }
     }
 
+    /* 極小ヘッダー */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px 6px;
+      flex-shrink: 0;
+    }
+
+    .app-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .app-title span {
+      color: var(--highlight);
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .app-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    /* メイングリッド (2x2) */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      width: 100%;
+    }
+
+    @media (min-width: 900px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        align-items: start;
+        gap: 8px;
+      }
+    }
+
+    /* カード基本設計 */
     .card {
       background-color: var(--card-bg);
-      border-radius: 12px;
-      padding: 8px;
+      border-radius: 8px;
+      padding: 6px 8px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-      align-self: stretch;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      position: relative;
+      align-self: start;
     }
 
-    /* 種族名一括入力セレクター */
-    .monster-select-bar {
-      display: flex;
-      align-items: center;
-      padding: 4px 10px;
-      background-color: var(--card-inner);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-    }
-
-    .monster-select-bar label {
-      font-size: 0.84rem;
-      color: var(--highlight);
-      font-weight: bold;
-      width: 52px;
-      flex-shrink: 0;
-      white-space: nowrap;
-      margin-bottom: 0;
-    }
-
-    .monster-select-bar select {
-      flex: 1;
-      width: 100%;
-      padding: 7px 10px;
-      background-color: var(--input-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-main);
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    .monster-select-bar select:focus {
-      outline: none;
-      border-color: var(--accent-color);
-    }
-
-    /* モンスターカードの入力欄 (PCでは横1列に並ぶ) */
-    .monster-params-row,
-    .config-grid-2x2 {
-      display: grid;
-      grid-template-columns: minmax(120px, 0.8fr) minmax(160px, 1.2fr) minmax(130px, 0.9fr) minmax(170px, 1.4fr);
-      gap: 10px;
-      margin-bottom: 0;
-      padding: 4px 10px;
-      background-color: var(--card-inner);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      align-items: center;
-    }
-
-    @media (max-width: 860px) {
-
-      .monster-params-row,
-      .config-grid-2x2 {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        padding: 4px 10px;
-      }
-    }
-
-    @media (max-width: 520px) {
-
-      .monster-params-row,
-      .config-grid-2x2 {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 4px 10px;
-      }
-    }
-
-    .config-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .config-cell label {
-      font-size: 0.84rem;
-      color: var(--highlight);
-      font-weight: bold;
-      flex-shrink: 0;
-      white-space: nowrap;
-      margin-bottom: 0;
-    }
-
+    /* 共通フォームパーツ */
     input[type="number"],
     select {
       width: 100%;
-      padding: 6px 10px;
+      min-width: 0;
+      padding: 4px 6px;
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text-main);
-      font-size: 0.95rem;
-      transition: border-color 0.2s;
+      font-size: 0.84rem;
+      transition: all 0.15s ease;
+      outline: none;
     }
 
     input[type="number"]::-webkit-inner-spin-button,
@@ -189,209 +163,437 @@
       -moz-appearance: textfield;
     }
 
-    input[type="number"]:focus,
+    input:focus,
     select:focus {
-      outline: none;
-      border-color: var(--accent-color);
+      border-color: var(--accent-hover);
+      box-shadow: 0 0 0 2px var(--accent-glow);
     }
 
-    .config-cell input[type="number"] {
-      text-align: center;
-      font-weight: bold;
-      height: 38px;
-      width: 72px;
-      max-width: 80px;
-      flex: 0 0 auto;
-    }
-
-    .config-cell select {
-      font-weight: bold;
-      height: 38px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    /* モーダル用セレクトボタン */
+    /* セレクト・ボタン共通 */
     .modal-select-btn {
       width: 100%;
-      height: 38px;
-      padding: 6px 10px;
+      padding: 4px 8px;
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
+      border-radius: 5px;
       color: var(--text-main);
-      font-size: 0.95rem;
-      font-weight: bold;
+      font-size: 0.84rem;
+      font-weight: 600;
       text-align: left;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: border-color 0.2s;
-      flex: 1;
-      min-width: 0;
+      transition: all 0.15s;
     }
 
-    .modal-select-btn:focus,
-    .modal-select-btn:hover {
-      outline: none;
-      border-color: var(--accent-color);
+    .modal-select-btn:hover,
+    .modal-select-btn:focus {
+      border-color: var(--accent-hover);
+      background-color: rgba(37, 99, 235, 0.08);
     }
 
     .modal-select-btn::after {
       content: '▼';
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-sub);
+      margin-left: 4px;
     }
 
-    /* サイズ選択のボタンスタイル */
-    .size-toggle-box {
+    /* モンスター基本設定 (上段: 種族名 ＆ プラス) */
+    .monster-top-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 5px;
+      align-items: center;
+    }
+
+    .monster-select-cell {
+      flex: 1;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 12px;
+      gap: 6px;
+      padding: 3px 6px;
+      background: var(--card-inner);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      min-width: 0;
+    }
+
+    .monster-select-cell label {
+      font-size: 0.78rem;
+      color: var(--highlight);
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .monster-select-cell select {
+      flex: 1;
+      height: 28px;
+      font-weight: 600;
+      color: #fff;
+      min-width: 0;
+    }
+
+    .plus-cell {
+      width: 90px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 6px;
+      background: var(--card-inner);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .plus-cell label {
+      font-size: 0.8rem;
+      color: var(--highlight);
+      font-weight: 800;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .plus-cell input[type="number"] {
+      width: 100%;
+      height: 28px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.86rem;
+    }
+
+    /* モンスター基本設定 (中段: サイズ＆特性の1行、性格だけの1行) */
+    .monster-mid-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 4px;
+      background: var(--card-inner);
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .cell-size {
+      flex: 1;
+    }
+
+    .cell-ai {
+      flex: 1.2;
+    }
+
+    .monster-personality-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+      background: var(--card-inner);
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .cell-personality {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .cell-personality .modal-select-btn {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+      padding-left: 8px;
+    }
+
+    .config-cell {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .config-cell label {
+      font-size: 0.76rem;
+      color: var(--text-sub);
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .config-cell select,
+    .config-cell .modal-select-btn {
+      height: 28px;
+      font-size: 0.82rem;
+      width: 100%;
+    }
+
+    /* サイズ選択 (セグメントコントロール風ボタンスタイル) */
+    .size-toggle-box {
+      display: flex;
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      height: 38px;
-      padding: 0 12px;
-      flex: 0 0 auto;
-      width: fit-content;
-      min-width: 96px;
+      border-radius: 5px;
+      height: 28px;
+      padding: 1px;
+      width: 100%;
+      min-width: 0;
     }
 
     .size-option {
-      display: inline-flex;
+      flex: 1;
+      display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
       cursor: pointer;
-      font-weight: bold;
-      font-size: 0.9rem;
-      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      border-radius: 4px;
+      transition: all 0.15s;
     }
 
     .size-option input[type="radio"] {
+      display: none;
+    }
+
+    .size-option:has(input:checked) {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* スキルスロット 縦型3段スタック (全文字がしっかり読める高視認性レイアウト) */
+    .skills-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: var(--card-inner);
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 4px;
+    }
+
+    .skill-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .skill-slot-tag {
+      width: 52px;
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 0;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      user-select: none;
+    }
+
+    .skill-slot-btn {
+      flex: 1;
+      min-width: 0;
+      height: 26px;
+      padding: 2px 8px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: left;
       cursor: pointer;
-      accent-color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.15s;
     }
 
-    .size-option:hover {
-      color: var(--highlight);
+    .skill-slot-btn:hover,
+    .skill-slot-btn:focus {
+      border-color: var(--accent-hover);
+      background-color: rgba(37, 99, 235, 0.08);
     }
 
-    /* ステータス表示切り替えタブ */
+    .skill-slot-btn.has-skill {
+      color: var(--text-main);
+      font-weight: 700;
+      border-color: rgba(59, 130, 246, 0.5);
+      background-color: rgba(37, 99, 235, 0.08);
+    }
+
+    .skill-slot-btn::after {
+      content: '▼';
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+
+    /* アクセサリー選択枠 */
+    .accessory-section {
+      background: var(--card-inner);
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .accessory-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .accessory-tag {
+      width: 52px;
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gold-text);
+      text-align: center;
+      background: rgba(245, 158, 11, 0.08);
+      padding: 3px 0;
+      border-radius: 4px;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      user-select: none;
+    }
+
+    .accessory-btn {
+      flex: 1;
+      min-width: 0;
+      height: 26px;
+      padding: 2px 8px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: all 0.15s;
+    }
+
+    .accessory-btn:hover,
+    .accessory-btn:focus {
+      border-color: var(--gold-border);
+      background-color: rgba(245, 158, 11, 0.06);
+    }
+
+    .accessory-btn.has-accessory {
+      color: #fef08a;
+      font-weight: 700;
+      border-color: rgba(245, 158, 11, 0.5);
+      background-color: rgba(245, 158, 11, 0.08);
+    }
+
+    .accessory-btn::after {
+      content: '▼';
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+
+    /* ステータスカード */
+    #status-card {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .status-tab-bar {
       display: flex;
       gap: 4px;
-      margin-top: 0;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       background-color: var(--input-bg);
-      padding: 4px;
-      border-radius: 8px;
+      padding: 2px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
+      flex-shrink: 0;
     }
 
     .status-tab-btn {
       flex: 1;
-      padding: 4px;
+      padding: 3px 6px;
       background: transparent;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       color: var(--text-sub);
-      font-size: 0.84rem;
-      font-weight: 600;
+      font-size: 0.76rem;
+      font-weight: 700;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1px;
-      transition: all 0.2s;
-    }
-
-    .status-tab-btn:hover {
-      color: var(--text-main);
-      background-color: rgba(255, 255, 255, 0.05);
+      transition: all 0.15s;
     }
 
     .status-tab-btn.active {
       background-color: var(--accent-color);
       color: #ffffff;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
     }
 
-    /* レーダーチャートカード */
-    .stats-chart-wrapper {
-      width: 100%;
-    }
-
-    .radar-chart-card {
-      background: radial-gradient(circle at center, #352618 0%, #1c140c 100%);
-      border: 1px solid rgba(217, 119, 6, 0.35);
-      border-radius: 10px;
-      padding: 6px 4px;
-      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.25);
-      max-width: 270px;
-      margin: 0 auto;
-    }
-
-    #radar-svg {
-      width: 100%;
-      height: auto;
-      display: block;
-      user-select: none;
-    }
-
-    .radar-label-name {
-      fill: #ffffff;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      paint-order: stroke fill;
-      stroke: #181109;
-      stroke-width: 3.5px;
-      stroke-linejoin: round;
-    }
-
-    .radar-label-val {
-      fill: #facc15;
-      font-size: 19px;
-      font-weight: 800;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      letter-spacing: 0.5px;
-      paint-order: stroke fill;
-      stroke: #181109;
-      stroke-width: 3.5px;
-      stroke-linejoin: round;
-    }
-
-    /* ステータス入力・計算グリッド */
+    /* ステータスグリッド (7列: 項目, 基準値, 系図, 性格, スキル, アクセ, 最終値) */
     .stats-table-grid {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 3px;
       width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      justify-content: flex-start;
     }
 
     .stats-row {
       display: grid;
-      grid-template-columns: 50px 1fr 50px 65px 65px 80px;
+      grid-template-columns: 36px 68px 42px 42px 48px 48px 64px;
       align-items: center;
-      gap: 2px;
-      font-size: 0.9rem;
-      padding: 2px;
-      border-radius: 6px;
-      background-color: #1a202c;
-      border: 1px solid rgba(55, 65, 81, 0.5);
+      gap: 4px;
+      padding: 3px 6px;
+      border-radius: 5px;
+      background-color: var(--card-inner);
+      border: 1px solid rgba(40, 51, 71, 0.7);
+    }
+
+    @media (max-width: 440px) {
+      .stats-table-grid {
+        max-width: 100%;
+      }
+
+      .stats-row {
+        grid-template-columns: 28px 54px 34px 34px 38px 38px 52px;
+        gap: 2px;
+        padding: 2px 3px;
+      }
     }
 
     .stats-header-row {
-      font-size: 0.78rem;
-      color: var(--text-sub);
+      font-size: 0.72rem;
+      color: var(--text-muted);
       font-weight: 700;
-      padding: 4px 8px;
       background: transparent;
       border: none;
       border-bottom: 1px solid var(--border-color);
+      padding: 1px 6px 3px;
     }
 
     .stats-header-row div {
@@ -399,44 +601,61 @@
     }
 
     .stats-row label {
-      margin-bottom: 0;
-      font-size: 0.88rem;
-      color: var(--text-main);
-      font-weight: bold;
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      font-weight: 700;
       text-align: center;
     }
 
     .stats-row input {
-      width: 100%;
       text-align: center;
-      font-weight: bold;
-      padding: 5px 6px;
-      font-size: 0.9rem;
-    }
-
-    .col-coeff {
-      text-align: center;
-      color: var(--text-sub);
-      font-size: 0.88rem;
-      font-family: monospace;
+      font-weight: 700;
+      padding: 2px 4px;
+      height: 26px;
+      font-size: 0.82rem;
     }
 
     .col-boost {
       text-align: center;
-      color: #34d399;
-      font-weight: bold;
-      font-family: monospace;
-      font-size: 0.88rem;
+      color: var(--green-text);
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.76rem;
     }
 
     .col-corr {
       text-align: center;
-      font-weight: bold;
-      font-size: 0.85rem;
+      font-weight: 700;
+      font-size: 0.74rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .col-skill {
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.74rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+    }
+
+    .col-skill.has-value {
+      color: #38bdf8;
+    }
+
+    .col-acc {
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.74rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+    }
+
+    .col-acc.has-value {
+      color: #facc15;
     }
 
     .corr-plus {
-      color: #34d399;
+      color: var(--green-text);
     }
 
     .corr-200 {
@@ -444,124 +663,358 @@
       background: var(--gold-bg);
       border: 1px solid var(--gold-border);
       border-radius: 3px;
-      padding: 1px 4px;
+      padding: 0 2px;
+      font-size: 0.72rem;
     }
 
     .corr-minus {
-      color: #f87171;
+      color: var(--red-text);
     }
 
     .corr-zero {
-      color: #6b7280;
+      color: var(--text-muted);
     }
 
     .col-final {
       text-align: center;
-      color: #60a5fa;
+      color: #93c5fd;
       font-weight: 800;
-      font-size: 1.05rem;
-      font-family: monospace;
+      font-size: 0.95rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(37, 99, 235, 0.12);
+      border-radius: 4px;
+      padding: 1px 0;
     }
 
+    /* レーダーチャート */
+    .stats-chart-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      padding: 4px 0;
+    }
 
+    .radar-chart-card {
+      background: radial-gradient(circle at center, #231e18 0%, #12100e 100%);
+      border: 1px solid rgba(217, 119, 6, 0.35);
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+      width: 100%;
+      max-width: 250px;
+    }
 
-    /* 家系図セクション */
-    .family-section {
-      margin-bottom: 8px;
+    #radar-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .radar-label-name {
+      fill: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      paint-order: stroke fill;
+      stroke: #181109;
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+
+    .radar-label-val {
+      fill: #facc15;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      paint-order: stroke fill;
+      stroke: #181109;
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+
+    /* 家系図カード */
+    .family-parents-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 5px;
     }
 
     .grandparents-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 5px;
     }
 
-    .form-group {
-      margin-bottom: 8px;
+    @media (max-width: 650px) {
+      .grandparents-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+      }
     }
 
     .form-group label {
       display: block;
-      font-size: 0.82rem;
+      font-size: 0.72rem;
       color: var(--text-sub);
+      font-weight: 600;
+      margin-bottom: 2px;
     }
 
-    /* 祖父母ボーナス表示バッジとボタンのレイアウト */
+    .family-select {
+      height: 28px;
+      font-size: 0.8rem;
+      padding: 2px 4px;
+    }
+
+    /* 家系図アクション行 */
     .action-row {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
-      align-items: stretch;
-    }
-
-    @media (min-width: 650px) {
-      .action-row {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-      }
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 2px;
     }
 
     .btn-matrix {
+      flex: 1;
       background-color: var(--card-inner);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 4px;
+      height: 28px;
     }
 
     .btn-matrix:hover {
       background-color: rgba(59, 130, 246, 0.15);
-      border-color: var(--accent-color);
+      border-color: var(--accent-hover);
       color: var(--highlight);
     }
 
-    .btn-matrix svg {
-      width: 16px;
-      height: 16px;
-    }
-
     .gp-bonus-badge {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 8px;
-      text-align: center;
-      font-size: 0.88rem;
-      font-weight: bold;
-      transition: all 0.3s;
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 8px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      transition: all 0.2s;
     }
 
     .gp-bonus-active {
-      background-color: rgba(52, 211, 153, 0.15);
-      border: 2px solid #34d399;
-      color: #34d399;
+      background-color: var(--green-bg);
+      border: 1px solid var(--green-text);
+      color: var(--green-text);
     }
 
     .gp-bonus-inactive {
-      background-color: rgba(156, 163, 175, 0.05);
+      background-color: rgba(148, 163, 184, 0.05);
       border: 1px dashed var(--border-color);
-      color: var(--text-sub);
-      font-weight: normal;
-      font-size: 0.82rem;
+      color: var(--text-muted);
     }
 
-    /* モーダル関連 */
+    /* 耐性カード (高密度テーブル) */
+    #guard-card {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .guard-header {
+      font-size: 0.75rem;
+      color: var(--highlight);
+      font-weight: 700;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: hidden;
+      flex: 1;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      table-layout: fixed;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid var(--border-color);
+      padding: 2px 2px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .matrix-table th {
+      background-color: var(--card-inner);
+      color: var(--text-sub);
+      font-weight: 600;
+      font-size: 0.72rem;
+    }
+
+    #guard-body td:nth-child(1),
+    #guard-body td:nth-child(3) {
+      background-color: rgba(26, 34, 48, 0.6);
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    #guard-body td:nth-child(2),
+    #guard-body td:nth-child(4) {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px 2px;
+    }
+
+    /* 耐性値の視覚的強調 (0未満: 赤色, 1〜99: 青色, 100以上: 金色) */
+    .res-high {
+      color: #fde047 !important;
+      font-weight: 800 !important;
+      background-color: rgba(245, 158, 11, 0.18);
+      border-radius: 3px;
+      padding: 0 2px;
+      text-shadow: 0 0 5px rgba(250, 204, 21, 0.35);
+    }
+
+    .res-mid {
+      color: #60a5fa !important;
+      font-weight: 700 !important;
+    }
+
+    .res-weak {
+      color: #f87171 !important;
+      font-weight: 700 !important;
+      background-color: rgba(239, 68, 68, 0.14);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    .res-zero {
+      color: var(--text-muted) !important;
+    }
+
+    /* 耐性マークの表示スタイル */
+    .res-val-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      line-height: 1;
+    }
+
+    .res-mark {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-left: 1px;
+    }
+
+    .res-mark-s1 {
+      color: #38bdf8;
+    }
+
+    .res-mark-s2 {
+      color: #c084fc;
+    }
+
+    .res-mark-s3 {
+      color: #34d399;
+    }
+
+    .res-mark-acc {
+      color: #facc15;
+      font-size: 0.62rem;
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 2px;
+      padding: 0 1px;
+      margin-left: 1px;
+    }
+
+    /* 補足 (折りたたみアコーディオン) */
+    .info-accordion {
+      margin-top: 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.74rem;
+      flex-shrink: 0;
+    }
+
+    .info-accordion summary {
+      padding: 3px 8px;
+      cursor: pointer;
+      color: var(--highlight);
+      font-weight: 700;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .info-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .info-accordion summary::after {
+      content: '＋';
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .info-accordion[open] summary::after {
+      content: 'ー';
+    }
+
+    .info-accordion-content {
+      padding: 4px 10px 6px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-sub);
+      background: var(--card-inner);
+    }
+
+    .info-accordion-content ul {
+      margin-left: 16px;
+    }
+
+    .info-accordion-content code {
+      background-color: #0f141f;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #93c5fd;
+      font-family: monospace;
+    }
+
+    /* モーダル */
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       z-index: 9999;
       align-items: center;
       justify-content: center;
@@ -573,494 +1026,413 @@
 
     .modal-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(3px);
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(2px);
     }
 
     .modal-content {
       position: relative;
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      width: 92%;
-      max-width: 500px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      border-radius: 10px;
+      padding: 10px 12px;
+      width: 95%;
+      max-width: 480px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
       z-index: 10000;
-      animation: modalFadeIn 0.25s ease-out;
-    }
-
-    @keyframes modalFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-15px) scale(0.98);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--border-color);
     }
 
     .modal-header h3 {
-      font-size: 1.05rem;
-      color: var(--text-main);
-      margin: 0;
+      font-size: 0.95rem;
+      color: #ffffff;
+      font-weight: 700;
     }
 
     .modal-close {
       background: none;
       border: none;
       color: var(--text-sub);
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       cursor: pointer;
       line-height: 1;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.2s;
+      padding: 0 4px;
     }
 
     .modal-close:hover {
-      color: #f87171;
+      color: var(--red-text);
     }
 
-    /* 表関連のスタイル */
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    table {
-      border-collapse: collapse;
-    }
-
-    .table-fit-content {
-      width: auto !important;
-      max-width: 100%;
-    }
-
-    .table-fit-content th,
-    .table-fit-content td {
-      padding: 4px 6px;
-      white-space: nowrap;
-    }
-
-    th,
-    td {
-      border: 1px solid var(--border-color);
-      font-size: 0.8rem;
-    }
-
-    th {
-      background-color: var(--table-header);
-      color: var(--text-sub);
-      font-weight: 600;
-      font-size: 0.78rem;
-    }
-
-    tr:hover {
-      background-color: var(--table-hover);
-    }
-
-    .stat-name {
-      font-weight: normal;
-      color: var(--text-main);
-      white-space: nowrap;
-    }
-
-    .matrix-table {
-      text-align: center;
-    }
-
-    .matrix-table th {
-      text-align: center;
+    .modal-body {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
     }
 
     .circle-mark {
-      color: #34d399;
-      font-weight: bold;
+      color: var(--green-text);
+      font-weight: 700;
     }
 
     .dash-mark {
-      color: #4b5563;
-      font-size: 0.8rem;
+      color: var(--border-light);
     }
 
     .personality-plus-200 {
       background: var(--gold-bg);
-      border: 1.5px solid var(--gold-border);
+      border: 1px solid var(--gold-border);
       color: var(--gold-text);
       font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 4px;
-      display: inline-block;
-      box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
-      letter-spacing: 0px;
-      font-size: 0.76rem;
-      line-height: 1.2;
+      padding: 1px 3px;
+      border-radius: 3px;
+      font-size: 0.72rem;
     }
 
     .personality-plus-100 {
-      color: #34d399;
-      font-weight: 600;
-      font-size: 0.76rem;
+      color: var(--green-text);
+      font-weight: 700;
+      font-size: 0.74rem;
     }
 
     .personality-minus {
-      color: #f87171;
-      font-weight: 500;
-      font-size: 0.76rem;
+      color: var(--red-text);
+      font-size: 0.74rem;
     }
 
     .personality-zero {
-      color: #6b7280;
+      color: var(--text-muted);
       font-size: 0.74rem;
     }
 
     .selected-row {
-      background-color: rgba(59, 130, 246, 0.2) !important;
-      outline: 1px solid var(--accent-color);
+      background-color: rgba(37, 99, 235, 0.25) !important;
+      outline: 1px solid var(--accent-hover);
     }
 
-    .info-box {
-      margin-top: 8px;
-      background-color: rgba(59, 130, 246, 0.1);
-      border-left: 4px solid var(--accent-color);
-      padding: 12px 16px;
-      border-radius: 0 8px 8px 0;
-      font-size: 0.85rem;
+    /* スキルモーダル用タブ・リスト */
+    .skill-modal-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .skill-tab-btn {
+      flex: 1;
+      padding: 5px 6px;
+      background: var(--card-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
       color: var(--text-sub);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .info-box strong {
-      color: #ffffff;
+    .skill-tab-btn.active {
+      background: var(--accent-color);
+      color: #fff;
+      border-color: var(--accent-color);
     }
 
-    .info-box ul {
-      margin-left: 20px;
-      margin-top: 6px;
+    .skill-list-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
     }
 
-    .info-box li {
-      margin-bottom: 4px;
+    .skill-item-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .info-box code {
-      background-color: #111827;
-      padding: 2px 6px;
-      border-radius: 4px;
+    .skill-item-btn:hover {
+      border-color: var(--accent-hover);
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--highlight);
+    }
+
+    .item-card-title {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 0.8rem;
+    }
+
+    .item-card-desc {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    .item-stat-badge {
+      display: inline-block;
+      color: var(--green-text);
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .item-res-badge {
+      display: inline-block;
       color: #93c5fd;
-      font-family: monospace;
-      word-break: break-word;
-    }
-
-    /* スマートフォン・小型画面向け最適化 */
-    @media (max-width: 650px) {
-      body {
-        padding: 8px 6px;
-      }
-
-      .card {
-        padding: 12px 8px;
-        border-radius: 10px;
-      }
-
-      .card h2 {
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-        padding-bottom: 4px;
-      }
-
-      .monster-select-bar {
-        padding: 8px;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-
-      .monster-select-bar label {
-        width: 56px;
-        font-size: 0.82rem;
-      }
-
-      .monster-select-bar select {
-        height: 34px;
-        font-size: 0.88rem;
-        padding: 4px 8px;
-      }
-
-      .monster-params-row,
-      .config-grid-2x2 {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 8px;
-      }
-
-      .config-cell label {
-        font-size: 0.82rem;
-      }
-
-      .config-cell input[type="number"] {
-        height: 34px;
-        font-size: 0.88rem;
-        width: 70px;
-        flex: 0 0 auto;
-      }
-
-      .config-cell select,
-      .modal-select-btn {
-        height: 34px;
-        font-size: 0.88rem;
-      }
-
-      .status-tab-btn {
-        padding: 6px 8px;
-        font-size: 0.8rem;
-      }
-
-      .stats-table-grid {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .stats-row {
-        grid-template-columns: 32px minmax(44px, 1fr) 32px 42px 42px 52px;
-        gap: 2px;
-        font-size: 0.78rem;
-        padding: 2px;
-      }
-
-      .stats-row label {
-        font-size: 0.8rem;
-      }
-
-      .stats-row input {
-        font-size: 0.82rem;
-        padding: 3px 2px;
-        height: 28px;
-        min-width: 0;
-      }
-
-      .stats-header-row {
-        font-size: 0.7rem;
-        padding: 3px 3px;
-      }
-
-      .col-coeff {
-        font-size: 0.76rem;
-      }
-
-      .col-boost {
-        font-size: 0.78rem;
-      }
-
-      .col-corr {
-        font-size: 0.76rem;
-      }
-
-      .corr-200 {
-        padding: 1px 2px;
-        font-size: 0.74rem;
-      }
-
-      .col-final {
-        font-size: 0.86rem;
-      }
-
-      /* アクション行（ボタンとバッジ）のスマホ最適化 */
-      .action-row {
-        gap: 8px;
-      }
-
-      .btn-matrix {
-        width: 100%;
-        padding: 10px;
-      }
-
-      .gp-bonus-badge {
-        display: inline-block;
-        width: 100%;
-      }
-
-      /* 対応表: 横スクロール不要で1画面内に完全収容 */
-      .table-wrapper {
-        width: 100%;
-        display: block;
-        overflow-x: hidden;
-      }
-
-      .matrix-table,
-      .table-fit-content {
-        table-layout: fixed;
-        width: 100% !important;
-        min-width: 0;
-      }
-
-      .matrix-table th,
-      .matrix-table td,
-      .table-fit-content th,
-      .table-fit-content td {
-        padding: 4px 1px !important;
-        font-size: 0.68rem !important;
-        letter-spacing: -0.3px;
-        text-align: center;
-        vertical-align: middle;
-      }
-
-      .matrix-table th:first-child,
-      .matrix-table td:first-child,
-      .matrix-table .stat-name,
-      .stat-name {
-        width: 52px !important;
-        max-width: 52px !important;
-        white-space: normal !important;
-        word-break: break-all !important;
-        overflow-wrap: break-word !important;
-        line-height: 1.18 !important;
-        padding: 4px 2px !important;
-        text-align: center !important;
-      }
-
-      .matrix-table th:not(:first-child),
-      .matrix-table td:not(:first-child),
-      .table-fit-content th:not(:first-child),
-      .table-fit-content td:not(:first-child) {
-        width: calc((100% - 52px) / 6) !important;
-        max-width: calc((100% - 52px) / 6) !important;
-        white-space: nowrap !important;
-        padding: 4px 0 !important;
-      }
-
-      .personality-plus-200 {
-        padding: 1px 2px !important;
-        font-size: 0.64rem !important;
-        letter-spacing: -0.5px !important;
-        border-width: 1px !important;
-      }
-
-      .personality-plus-100,
-      .personality-minus,
-      .personality-zero {
-        font-size: 0.68rem !important;
-      }
-
-      .dash-mark {
-        font-size: 0.75rem !important;
-      }
-
-      .info-box {
-        padding: 10px 12px;
-        font-size: 0.8rem;
-      }
-
-      .info-box ul {
-        margin-left: 16px;
-      }
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-right: 4px;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <!-- モンスターカード (上に左右にまたがる) -->
-    <div class="card monster-card" id="monster-card">
-      <!-- 種族選択 (ステータス一括入力) -->
-      <div class="monster-select-bar">
-        <label for="monster-select">種族名</label>
-        <select id="monster-select">
-          <option value="">-- 種族を選択して基準値を一括入力 --</option>
-        </select>
+  <div class="app-container">
+    <!-- 最上部ミニヘッダー -->
+    <header class="app-header">
+      <div class="app-title">
+        DQM4計算機
       </div>
+    </header>
 
-      <!-- プラス、性格、サイズ、特性の入力欄 (PCでは横1列に並ぶ) -->
-      <div class="monster-params-row" id="config-grid">
-        <!-- 1. プラス -->
-        <div class="config-cell">
-          <label for="plus">プラス</label>
-          <input type="number" id="plus" value="3" min="0" max="999" step="1">
-        </div>
-
-        <!-- 2. 性格 -->
-        <div class="config-cell">
-          <label for="personality-btn">性格</label>
-          <input type="hidden" id="personality" value="まじめ">
-          <button type="button" id="personality-btn" class="modal-select-btn"
-            onclick="openPersonalityModal()">まじめ</button>
-        </div>
-
-        <!-- 3. サイズ -->
-        <div class="config-cell">
-          <label>サイズ</label>
-          <div class="size-toggle-box">
-            <label class="size-option">
-              <input type="radio" name="size" value="S" checked> S
-            </label>
-            <label class="size-option">
-              <input type="radio" name="size" value="L"> L
-            </label>
+    <!-- 2カラムダッシュボード (2x2 グリッド) -->
+    <div class="dashboard-grid">
+      <!-- 1. モンスターカード -->
+      <div class="card" id="monster-card">
+        <!-- 上段: 種族選択バー ＆ プラス -->
+        <div class="monster-top-row">
+          <div class="monster-select-cell">
+            <label for="monster-select">種族名</label>
+            <select id="monster-select">
+              <option value="">-- 種族を選択して基準値を一括入力 --</option>
+            </select>
+          </div>
+          <div class="plus-cell">
+            <label for="plus">＋</label>
+            <input type="number" id="plus" value="3" min="0" max="999" step="1">
           </div>
         </div>
 
-        <!-- 4. 特性 -->
-        <div class="config-cell">
-          <label for="ai">特性</label>
-          <select id="ai">
-            <option value="1" selected>1回行動</option>
-            <option value="1-2">1～2回行動</option>
-            <option value="1-3">1～3回行動</option>
-            <option value="2">2回行動</option>
-            <option value="2-3">2～3回行動</option>
-            <option value="1-metal">1回行動+メタルボディ</option>
-            <option value="1-2-metal">1～2回行動+メタルボディ</option>
-            <option value="1-3-metal">1～3回行動+メタルボディ</option>
-          </select>
+        <!-- 中段: サイズ ＆ 特性 (1行目) -->
+        <div class="monster-mid-row">
+          <!-- サイズ -->
+          <div class="config-cell cell-size">
+            <label>サイズ</label>
+            <div class="size-toggle-box">
+              <label class="size-option">
+                <input type="radio" name="size" value="S" checked> S
+              </label>
+              <label class="size-option">
+                <input type="radio" name="size" value="L"> L
+              </label>
+            </div>
+          </div>
+
+          <!-- 特性 -->
+          <div class="config-cell cell-ai">
+            <label for="ai">特性</label>
+            <select id="ai">
+              <option value="1" selected>1回行動</option>
+              <option value="1-2">1～2回行動</option>
+              <option value="1-3">1～3回行動</option>
+              <option value="2">2回行動</option>
+              <option value="2-3">2～3回行動</option>
+              <option value="1-metal">1回+メタル</option>
+              <option value="1-2-metal">1～2回+メタル</option>
+              <option value="1-3-metal">1～3回+メタル</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 性格 (2行目: 単独行にして長い名前でも折り返さずすっきり表示) -->
+        <div class="monster-personality-row">
+          <div class="config-cell cell-personality">
+            <label for="personality-btn">性格</label>
+            <input type="hidden" id="personality" value="まじめ">
+            <button type="button" id="personality-btn" class="modal-select-btn"
+              onclick="openPersonalityModal()">まじめ</button>
+          </div>
+        </div>
+
+        <!-- 下段: スキルスロット 3段スタック (全文字がしっかり読める高視認性レイアウト) -->
+        <div class="skills-stack">
+          <div class="skill-row">
+            <span class="skill-slot-tag">スキル1</span>
+            <button type="button" class="skill-slot-btn" id="skill-btn-1" data-slot="1"
+              onclick="openSkillModal(1)">未設定</button>
+          </div>
+          <div class="skill-row">
+            <span class="skill-slot-tag">スキル2</span>
+            <button type="button" class="skill-slot-btn" id="skill-btn-2" data-slot="2"
+              onclick="openSkillModal(2)">未設定</button>
+          </div>
+          <div class="skill-row">
+            <span class="skill-slot-tag">スキル3</span>
+            <button type="button" class="skill-slot-btn" id="skill-btn-3" data-slot="3"
+              onclick="openSkillModal(3)">未設定</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 下部: ステータスカードと家系図カードが左右横並び (スマホ版では縦並び) -->
-    <div class="grid-container">
-      <!-- ステータスカード (表と図) -->
-      <div class="card" id="status-card">
-        <!-- ステータス表示切り替えタブ -->
-        <div class="status-tab-bar">
-          <button type="button" class="status-tab-btn active" id="tab-btn-table"
-            onclick="switchStatusTab('table')">表</button>
-          <button type="button" class="status-tab-btn" id="tab-btn-chart" onclick="switchStatusTab('chart')">図</button>
+      <!-- 2. 系統カード (家系図カード + 上部にアクセ選択欄) -->
+      <div class="card" id="family-card">
+        <!-- アクセサリー選択欄（最上部に配置） -->
+        <div class="accessory-section" style="margin-bottom: 6px;">
+          <div class="accessory-row">
+            <span class="accessory-tag">アクセ</span>
+            <button type="button" class="accessory-btn" id="accessory-btn" onclick="openAccessoryModal()">未設定</button>
+          </div>
         </div>
 
-        <!-- ステータス入力＆結果グリッド -->
+        <!-- 親1・親2 -->
+        <div class="family-parents-grid">
+          <div class="form-group">
+            <label for="parent1">親 1</label>
+            <select id="parent1" class="family-select">
+              <option value="none">指定なし</option>
+              <option value="slime" selected>スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material">物質</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="parent2">親 2</label>
+            <select id="parent2" class="family-select">
+              <option value="none">指定なし</option>
+              <option value="slime">スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material" selected>物質</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 祖父母 1〜4 -->
+        <div class="grandparents-grid">
+          <div class="form-group">
+            <label for="grandparent1">祖父母 1</label>
+            <select id="grandparent1" class="family-select">
+              <option value="none" selected>指定なし</option>
+              <option value="slime">スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material">物質</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="grandparent2">祖父母 2</label>
+            <select id="grandparent2" class="family-select">
+              <option value="none" selected>指定なし</option>
+              <option value="slime">スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material">物質</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="grandparent3">祖父母 3</label>
+            <select id="grandparent3" class="family-select">
+              <option value="none" selected>指定なし</option>
+              <option value="slime">スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material">物質</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="grandparent4">祖父母 4</label>
+            <select id="grandparent4" class="family-select">
+              <option value="none" selected>指定なし</option>
+              <option value="slime">スライム</option>
+              <option value="dragon">ドラゴン</option>
+              <option value="nature">自然</option>
+              <option value="beast">魔獣</option>
+              <option value="demon">悪魔</option>
+              <option value="zombie">ゾンビ</option>
+              <option value="material">物质</option>
+              <option value="legend">???</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- アクション行: 系統対応表ボタン ＆ 祖父母ボーナスバッジ -->
+        <div class="action-row">
+          <button type="button" class="btn-matrix" onclick="openMatrixModal()">
+            <span>系統対応表</span>
+          </button>
+          <div id="gp-bonus-display" class="gp-bonus-badge gp-bonus-inactive">
+            ボーナスなし
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ステータスカード -->
+      <div class="card" id="status-card">
+        <!-- タブ切り替えバー -->
+        <div class="status-tab-bar">
+          <button type="button" class="status-tab-btn active" id="tab-btn-table"
+            onclick="switchStatusTab('table')">ステータス表</button>
+          <button type="button" class="status-tab-btn" id="tab-btn-chart"
+            onclick="switchStatusTab('chart')">レーダー図</button>
+        </div>
+
+        <!-- ステータス表グリッド (7列: 項目, 基準値, 系図, 性格, スキル, アクセ, 最終値) -->
         <div class="stats-table-grid" id="stats-grid">
           <div class="stats-row stats-header-row">
             <div>項目</div>
-            <div>基準</div>
-            <div>係数</div>
+            <div>基準値</div>
             <div>系図</div>
             <div>性格</div>
-            <div style="color:#60a5fa;">最終</div>
+            <div>スキル</div>
+            <div>アクセ</div>
+            <div style="color:#93c5fd;">最終値</div>
           </div>
 
           <!-- HP -->
           <div class="stats-row">
             <label for="stat-hp">HP</label>
             <input type="number" id="stat-hp" value="1390" min="0" step="10">
-            <div class="col-coeff" id="coeff-hp">0.0</div>
             <div class="col-boost" id="boost-hp">+0</div>
             <div class="col-corr" id="corr-hp">0</div>
+            <div class="col-skill" id="skill-stat-hp">+0</div>
+            <div class="col-acc" id="acc-stat-hp">+0</div>
             <div class="col-final" id="final-hp">1390</div>
           </div>
 
@@ -1068,9 +1440,10 @@
           <div class="stats-row">
             <label for="stat-mp">MP</label>
             <input type="number" id="stat-mp" value="540" min="0" step="10">
-            <div class="col-coeff" id="coeff-mp">0.0</div>
             <div class="col-boost" id="boost-mp">+0</div>
             <div class="col-corr" id="corr-mp">0</div>
+            <div class="col-skill" id="skill-stat-mp">+0</div>
+            <div class="col-acc" id="acc-stat-mp">+0</div>
             <div class="col-final" id="final-mp">540</div>
           </div>
 
@@ -1078,9 +1451,10 @@
           <div class="stats-row">
             <label for="stat-atk">攻撃</label>
             <input type="number" id="stat-atk" value="490" min="0" step="10">
-            <div class="col-coeff" id="coeff-atk">0.0</div>
             <div class="col-boost" id="boost-atk">+0</div>
             <div class="col-corr" id="corr-atk">0</div>
+            <div class="col-skill" id="skill-stat-atk">+0</div>
+            <div class="col-acc" id="acc-stat-atk">+0</div>
             <div class="col-final" id="final-atk">490</div>
           </div>
 
@@ -1088,9 +1462,10 @@
           <div class="stats-row">
             <label for="stat-def">守備</label>
             <input type="number" id="stat-def" value="540" min="0" step="10">
-            <div class="col-coeff" id="coeff-def">0.0</div>
             <div class="col-boost" id="boost-def">+0</div>
             <div class="col-corr" id="corr-def">0</div>
+            <div class="col-skill" id="skill-stat-def">+0</div>
+            <div class="col-acc" id="acc-stat-def">+0</div>
             <div class="col-final" id="final-def">540</div>
           </div>
 
@@ -1098,9 +1473,10 @@
           <div class="stats-row">
             <label for="stat-spd">素早</label>
             <input type="number" id="stat-spd" value="430" min="0" step="10">
-            <div class="col-coeff" id="coeff-spd">0.0</div>
             <div class="col-boost" id="boost-spd">+0</div>
             <div class="col-corr" id="corr-spd">0</div>
+            <div class="col-skill" id="skill-stat-spd">+0</div>
+            <div class="col-acc" id="acc-stat-spd">+0</div>
             <div class="col-final" id="final-spd">430</div>
           </div>
 
@@ -1108,9 +1484,10 @@
           <div class="stats-row">
             <label for="stat-wis">賢さ</label>
             <input type="number" id="stat-wis" value="520" min="0" step="10">
-            <div class="col-coeff" id="coeff-wis">0.0</div>
             <div class="col-boost" id="boost-wis">+0</div>
             <div class="col-corr" id="corr-wis">0</div>
+            <div class="col-skill" id="skill-stat-wis">+0</div>
+            <div class="col-acc" id="acc-stat-wis">+0</div>
             <div class="col-final" id="final-wis">520</div>
           </div>
         </div>
@@ -1119,42 +1496,28 @@
         <div class="stats-chart-wrapper" id="stats-chart-view" style="display: none;">
           <div class="radar-chart-card">
             <svg id="radar-svg" viewBox="0 0 250 210" xmlns="http://www.w3.org/2000/svg">
-              <!-- 外枠の六角形 (ゲーム風フレーム) -->
               <polygon points="125,51 171.8,78 171.8,132 125,159 78.2,132 78.2,78" fill="rgba(65, 80, 102, 0.75)"
                 stroke="rgba(160, 178, 202, 0.6)" stroke-width="1.8" />
-
-              <!-- 6方向のラベル・数値表示 (アイコンなし・コンパクト配置) -->
-              <!-- 1. 最大HP (Top: 12時) -->
               <g class="radar-label-group" id="radar-group-hp">
                 <text x="125" y="19" text-anchor="middle" class="radar-label-name">最大HP</text>
                 <text x="125" y="39" text-anchor="middle" class="radar-label-val" id="radar-val-hp">--</text>
               </g>
-
-              <!-- 2. 最大MP (Top-Right: 2時) -->
               <g class="radar-label-group" id="radar-group-mp">
                 <text x="180" y="73" text-anchor="start" class="radar-label-name">最大MP</text>
                 <text x="180" y="93" text-anchor="start" class="radar-label-val" id="radar-val-mp">--</text>
               </g>
-
-              <!-- 3. かしこさ (Bottom-Right: 4時) -->
               <g class="radar-label-group" id="radar-group-wis">
                 <text x="180" y="127" text-anchor="start" class="radar-label-name">かしこさ</text>
                 <text x="180" y="147" text-anchor="start" class="radar-label-val" id="radar-val-wis">--</text>
               </g>
-
-              <!-- 4. すばやさ (Bottom: 6時) -->
               <g class="radar-label-group" id="radar-group-spd">
                 <text x="125" y="180" text-anchor="middle" class="radar-label-name">すばやさ</text>
                 <text x="125" y="200" text-anchor="middle" class="radar-label-val" id="radar-val-spd">--</text>
               </g>
-
-              <!-- 5. 守備力 (Bottom-Left: 8時) -->
               <g class="radar-label-group" id="radar-group-def">
                 <text x="70" y="127" text-anchor="end" class="radar-label-name">守備力</text>
                 <text x="70" y="147" text-anchor="end" class="radar-label-val" id="radar-val-def">--</text>
               </g>
-
-              <!-- 6. 攻撃力 (Top-Left: 10時) -->
               <g class="radar-label-group" id="radar-group-atk">
                 <text x="70" y="73" text-anchor="end" class="radar-label-name">攻撃力</text>
                 <text x="70" y="93" text-anchor="end" class="radar-label-val" id="radar-val-atk">--</text>
@@ -1164,124 +1527,88 @@
         </div>
       </div>
 
-      <!-- 系統選択カード -->
-      <div class="card" id="family-card">
-        <div class="family-section">
-          <div class="grandparents-grid">
-            <div class="form-group">
-              <label for="parent1">親 1</label>
-              <select id="parent1" class="family-select">
-                <option value="none">指定なし</option>
-                <option value="slime" selected>スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material">物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="parent2">親 2</label>
-              <select id="parent2" class="family-select">
-                <option value="none">指定なし</option>
-                <option value="slime">スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material" selected>物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-          </div>
+      <!-- 4. 耐性カード -->
+      <div class="card" id="guard-card">
+        <div class="guard-header">
+          <span>属性耐性 / 状態異常耐性</span>
         </div>
-
-        <div class="family-section">
-          <div class="grandparents-grid">
-            <div class="form-group">
-              <label for="grandparent1">祖父母 1</label>
-              <select id="grandparent1" class="family-select">
-                <option value="none" selected>指定なし</option>
-                <option value="slime">スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material">物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="grandparent2">祖父母 2</label>
-              <select id="grandparent2" class="family-select">
-                <option value="none" selected>指定なし</option>
-                <option value="slime">スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material">物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="grandparent3">祖父母 3</label>
-              <select id="grandparent3" class="family-select">
-                <option value="none" selected>指定なし</option>
-                <option value="slime">スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material">物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="grandparent4">祖父母 4</label>
-              <select id="grandparent4" class="family-select">
-                <option value="none" selected>指定なし</option>
-                <option value="slime">スライム</option>
-                <option value="dragon">ドラゴン</option>
-                <option value="nature">自然</option>
-                <option value="beast">魔獣</option>
-                <option value="demon">悪魔</option>
-                <option value="zombie">ゾンビ</option>
-                <option value="material">物質</option>
-                <option value="legend">???</option>
-              </select>
-            </div>
-          </div>
-          <!-- 祖父母ボーナス表示と系統対応表ボタン -->
-          <div class="action-row">
-            <button type="button" class="btn-matrix" onclick="openMatrixModal()">
-              系統対応表を確認
-            </button>
-            <div id="gp-bonus-display" class="gp-bonus-badge gp-bonus-inactive">
-              祖父母ボーナスなし（異なる4系統で発生）
-            </div>
-          </div>
+        <div class="table-wrapper">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th style="width:28%;">属性</th>
+                <th style="width:22%;">耐性</th>
+                <th style="width:28%;">状態異常</th>
+                <th style="width:22%;">耐性</th>
+              </tr>
+            </thead>
+            <tbody id="guard-body">
+              <tr>
+                <td>火</td>
+                <td class="res-zero">0</td>
+                <td>弱体化</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>水</td>
+                <td class="res-zero">0</td>
+                <td>幻惑</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>風</td>
+                <td class="res-zero">0</td>
+                <td>封じ</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>地</td>
+                <td class="res-zero">0</td>
+                <td>MP吸収</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>爆発</td>
+                <td class="res-zero">0</td>
+                <td>混乱</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>氷結</td>
+                <td class="res-zero">0</td>
+                <td>眠り</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>電撃</td>
+                <td class="res-zero">0</td>
+                <td>マヒ</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>光</td>
+                <td class="res-zero">0</td>
+                <td>休み</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td>闇</td>
+                <td class="res-zero">0</td>
+                <td>毒</td>
+                <td class="res-zero">0</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted);">-</td>
+                <td class="res-zero">-</td>
+                <td>即死</td>
+                <td class="res-zero">0</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-
-    <!-- 捕捉 -->
-    <div class="info-box">
-      <strong>捕捉</strong>
-      <ul>
-        <li><strong>最終ステータス計算式</strong>：<code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
-        <li><strong>倍率計算式</strong>：<code>特性補正 × サイズ補正</code></li>
-        <li><strong>系図計算式</strong>：<code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
-        <li><strong>祖父母ボーナス</strong>：祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
-        <li>入力内容はブラウザのローカルストレージへ自動保存されます。</li>
-      </ul>
-    </div>
+  </div>
   </div>
 
   <!-- モーダル: 系統対応表 -->
@@ -1294,10 +1621,10 @@
       </div>
       <div class="modal-body">
         <div class="table-wrapper">
-          <table class="matrix-table table-fit-content">
+          <table class="matrix-table">
             <thead>
               <tr>
-                <th>系統</th>
+                <th style="width:26%;">系統</th>
                 <th>HP</th>
                 <th>MP</th>
                 <th>攻撃</th>
@@ -1324,11 +1651,10 @@
       </div>
       <div class="modal-body">
         <div class="table-wrapper">
-          <p style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 8px; text-align: center;">行クリックで選択</p>
-          <table class="matrix-table table-fit-content">
+          <table class="matrix-table">
             <thead>
               <tr>
-                <th>性格</th>
+                <th style="width:28%;">性格</th>
                 <th>HP</th>
                 <th>MP</th>
                 <th>攻撃</th>
@@ -1340,6 +1666,49 @@
             <tbody id="personality-matrix-body">
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: スキル選択 -->
+  <div id="skill-modal" class="modal">
+    <div class="modal-overlay" onclick="closeSkillModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="skill-modal-title">スキル選択</h3>
+        <button class="modal-close" onclick="closeSkillModal()" title="閉じる">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="skill-modal-tabs">
+          <button type="button" class="skill-tab-btn active" onclick="switchSkillTab('stat')">ステータス系</button>
+          <button type="button" class="skill-tab-btn" onclick="switchSkillTab('attack')">特技系</button>
+          <button type="button" class="skill-tab-btn" onclick="switchSkillTab('guard')">ガード系</button>
+        </div>
+        <div class="skill-list-grid" id="skill-list-container">
+          <!-- JSで動的描画 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: アクセサリー選択 -->
+  <div id="accessory-modal" class="modal">
+    <div class="modal-overlay" onclick="closeAccessoryModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>アクセサリー選択</h3>
+        <button class="modal-close" onclick="closeAccessoryModal()" title="閉じる">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="skill-modal-tabs">
+          <button type="button" class="skill-tab-btn active" id="acc-tab-stat"
+            onclick="switchAccessoryTab('stat')">ガードなし</button>
+          <button type="button" class="skill-tab-btn" id="acc-tab-res"
+            onclick="switchAccessoryTab('res')">ガードあり</button>
+        </div>
+        <div class="skill-list-grid" id="accessory-list-container">
+          <!-- JSで動的描画 -->
         </div>
       </div>
     </div>
@@ -1418,163 +1787,163 @@
 
     // 種族別ステータス基準値 & S/L別行動回数データ (全157種族)
     const monsterData = {
-      'アイアンタートル': { hp: 1380, mp: 560, atk: 430, def: 800, spd: 300, wis: 660, sAction: '1', lAction: '1-2' },
-      'あおバチ騎兵': { hp: 1390, mp: 360, atk: 550, def: 510, spd: 530, wis: 410, sAction: '1', lAction: '1-3' },
-      'アカリリス': { hp: 1370, mp: 380, atk: 530, def: 390, spd: 590, wis: 510, sAction: '1', lAction: '1-3' },
-      'アクアスライム': { hp: 1390, mp: 410, atk: 460, def: 460, spd: 570, wis: 510, sAction: '1', lAction: '2' },
-      'あくまのツボ': { hp: 1350, mp: 470, atk: 500, def: 590, spd: 480, wis: 580, sAction: '1', lAction: '2' },
-      'アニマルゾンビ': { hp: 1400, mp: 500, atk: 620, def: 400, spd: 480, wis: 300, sAction: '1', lAction: '2' },
-      'あばれうしどり': { hp: 1330, mp: 390, atk: 620, def: 550, spd: 510, wis: 480, sAction: '1', lAction: '1-3' },
-      'あばれこまいぬ': { hp: 1370, mp: 400, atk: 570, def: 470, spd: 480, wis: 550, sAction: '1', lAction: '1-3' },
-      'アントベア': { hp: 1390, mp: 450, atk: 610, def: 380, spd: 470, wis: 450, sAction: '1', lAction: '1-3' },
-      'イエティ': { hp: 1360, mp: 290, atk: 600, def: 570, spd: 540, wis: 420, sAction: '1', lAction: '2' },
-      'いたずらもぐら': { hp: 1330, mp: 360, atk: 630, def: 580, spd: 540, wis: 400, sAction: '1', lAction: '1-3' },
-      'いっかくうさぎ': { hp: 1300, mp: 380, atk: 570, def: 470, spd: 670, wis: 470, sAction: '1', lAction: '1-3' },
-      'いっかく竜': { hp: 1410, mp: 290, atk: 640, def: 540, spd: 480, wis: 290, sAction: '1', lAction: '1-3' },
-      'いばらドラゴン': { hp: 1370, mp: 360, atk: 570, def: 610, spd: 530, wis: 350, sAction: '1', lAction: '1-3' },
-      'インプ': { hp: 1350, mp: 460, atk: 470, def: 410, spd: 600, wis: 590, sAction: '1', lAction: '1-3' },
-      'ウィングスネーク': { hp: 1360, mp: 310, atk: 540, def: 360, spd: 680, wis: 450, sAction: '1', lAction: '1-3' },
-      'おおがらす': { hp: 1310, mp: 420, atk: 560, def: 590, spd: 570, wis: 490, sAction: '1', lAction: '1-3' },
-      'おおきづち': { hp: 1450, mp: 300, atk: 630, def: 570, spd: 390, wis: 290, sAction: '1', lAction: '2' },
-      'オーク': { hp: 1350, mp: 380, atk: 570, def: 500, spd: 510, wis: 560, sAction: '1', lAction: '2' },
-      'おおさそり': { hp: 1350, mp: 340, atk: 630, def: 650, spd: 480, wis: 390, sAction: '1', lAction: '1-3' },
-      'おおにわとり': { hp: 1280, mp: 360, atk: 540, def: 460, spd: 690, wis: 600, sAction: '1', lAction: '2-3' },
-      'おおねずみ': { hp: 1360, mp: 350, atk: 580, def: 490, spd: 560, wis: 440, sAction: '1', lAction: '1-3' },
-      'おおめだま': { hp: 1350, mp: 440, atk: 560, def: 520, spd: 520, wis: 480, sAction: '1', lAction: '1-3' },
-      'オクトリーチ': { hp: 1410, mp: 420, atk: 600, def: 410, spd: 450, wis: 430, sAction: '1', lAction: '1-3' },
-      'オニオーン': { hp: 1400, mp: 620, atk: 490, def: 460, spd: 340, wis: 660, sAction: '1', lAction: '1-3' },
-      'おばけキノコ': { hp: 1350, mp: 430, atk: 580, def: 590, spd: 500, wis: 420, sAction: '1', lAction: '2-3' },
-      'おばけキャンドル': { hp: 1390, mp: 400, atk: 480, def: 610, spd: 490, wis: 490, sAction: '1', lAction: '1-3' },
-      'おばけヒトデ': { hp: 1420, mp: 330, atk: 430, def: 520, spd: 510, wis: 390, sAction: '1', lAction: '1-3' },
-      'がいこつ': { hp: 1420, mp: 290, atk: 610, def: 510, spd: 430, wis: 440, sAction: '1', lAction: '2' },
-      'ガップリン': { hp: 1390, mp: 410, atk: 540, def: 470, spd: 510, wis: 460, sAction: '1', lAction: '1-3' },
-      'カバシラー': { hp: 1300, mp: 450, atk: 540, def: 430, spd: 690, wis: 460, sAction: '1', lAction: '2-3' },
-      'かまいたち': { hp: 1320, mp: 570, atk: 590, def: 480, spd: 510, wis: 470, sAction: '1', lAction: '1-3' },
-      'からくりエッグ': { hp: 1380, mp: 400, atk: 570, def: 540, spd: 510, wis: 380, sAction: '1', lAction: '1-3' },
-      'ギズモ': { hp: 1360, mp: 430, atk: 570, def: 350, spd: 510, wis: 620, sAction: '1', lAction: '2' },
-      'ギャオース': { hp: 1350, mp: 320, atk: 690, def: 620, spd: 440, wis: 400, sAction: '1', lAction: '1-3' },
-      'キャタピラー': { hp: 1340, mp: 400, atk: 590, def: 570, spd: 500, wis: 490, sAction: '1', lAction: '1-3' },
-      'キャットフライ': { hp: 1310, mp: 430, atk: 450, def: 430, spd: 700, wis: 600, sAction: '1', lAction: '1-3' },
-      'キラーコーン': { hp: 1300, mp: 550, atk: 610, def: 380, spd: 610, wis: 430, sAction: '1', lAction: '2-3' },
-      'きりかぶおばけ': { hp: 1370, mp: 460, atk: 580, def: 590, spd: 460, wis: 390, sAction: '1', lAction: '2' },
-      'くさった死体': { hp: 1420, mp: 360, atk: 620, def: 530, spd: 400, wis: 390, sAction: '1', lAction: '2' },
-      'くしざしツインズ': { hp: 1370, mp: 440, atk: 570, def: 480, spd: 490, wis: 480, sAction: '1', lAction: '1-3' },
-      'くびながイタチ': { hp: 1380, mp: 370, atk: 510, def: 470, spd: 580, wis: 460, sAction: '1', lAction: '2' },
-      'くみひもこぞう': { hp: 1340, mp: 420, atk: 580, def: 390, spd: 550, wis: 570, sAction: '1', lAction: '1-3' },
-      'くらやみハーピー': { hp: 1320, mp: 500, atk: 510, def: 390, spd: 610, wis: 590, sAction: '1', lAction: '1-3' },
-      'グレムリン': { hp: 1370, mp: 650, atk: 450, def: 290, spd: 520, wis: 640, sAction: '1', lAction: '1-3' },
-      'クロコマーチ': { hp: 1400, mp: 610, atk: 600, def: 280, spd: 460, wis: 390, sAction: '1', lAction: '1-3' },
-      'ぐんたいガニ': { hp: 1340, mp: 320, atk: 570, def: 720, spd: 520, wis: 420, sAction: '1', lAction: '1-2' },
-      'ゴースト': { hp: 1350, mp: 640, atk: 480, def: 270, spd: 570, wis: 590, sAction: '1', lAction: '2' },
-      'ゴールドマン': { hp: 1400, mp: 420, atk: 520, def: 580, spd: 380, wis: 600, sAction: '1', lAction: '2' },
-      'コドラ': { hp: 1360, mp: 320, atk: 640, def: 490, spd: 590, wis: 290, sAction: '1', lAction: '1-3' },
-      'サボテンボール': { hp: 1400, mp: 330, atk: 570, def: 520, spd: 490, wis: 430, sAction: '1', lAction: '1-3' },
-      'さまようよろい': { hp: 1340, mp: 370, atk: 560, def: 680, spd: 490, wis: 490, sAction: '1', lAction: '1-3' },
-      'さんぞくウルフ': { hp: 1320, mp: 360, atk: 550, def: 470, spd: 630, wis: 530, sAction: '1', lAction: '2' },
-      'シーメーダ': { hp: 1330, mp: 580, atk: 370, def: 360, spd: 690, wis: 620, sAction: '1', lAction: '1-3' },
-      'しましまキャット': { hp: 1360, mp: 480, atk: 560, def: 510, spd: 480, wis: 490, sAction: '1', lAction: '1-3' },
-      'シャドー': { hp: 1290, mp: 440, atk: 480, def: 490, spd: 670, wis: 610, sAction: '1', lAction: '1-3' },
-      'ジャングラー': { hp: 1390, mp: 310, atk: 690, def: 380, spd: 460, wis: 450, sAction: '1', lAction: '1-3' },
-      'ジャンボドラキー': { hp: 1430, mp: 430, atk: 530, def: 560, spd: 310, wis: 610, sAction: '1', lAction: '2-3' },
-      'スカイドラゴン': { hp: 1360, mp: 320, atk: 600, def: 530, spd: 530, wis: 450, sAction: '1', lAction: '1-3' },
-      'スカルガルー': { hp: 1370, mp: 450, atk: 630, def: 380, spd: 450, wis: 530, sAction: '1', lAction: '1-3' },
-      'スカルライダー': { hp: 1400, mp: 430, atk: 520, def: 370, spd: 480, wis: 600, sAction: '1-2', lAction: '1-2' },
-      'スキッパー': { hp: 1340, mp: 380, atk: 560, def: 630, spd: 530, wis: 450, sAction: '1', lAction: '1-3' },
-      'ズッキーニャ': { hp: 1330, mp: 460, atk: 590, def: 560, spd: 490, wis: 500, sAction: '1', lAction: '1-3' },
-      'スノーム': { hp: 1390, mp: 480, atk: 510, def: 580, spd: 390, wis: 580, sAction: '1', lAction: '1-3' },
-      'スマイルリザード': { hp: 1430, mp: 360, atk: 460, def: 350, spd: 630, wis: 390, sAction: '1', lAction: '2' },
-      'スモーク': { hp: 1290, mp: 450, atk: 540, def: 580, spd: 590, wis: 550, sAction: '1', lAction: '1-3' },
-      'スライム': { hp: 1420, mp: 410, atk: 460, def: 380, spd: 650, wis: 310, sAction: '1', lAction: '1-3' },
-      'スライムカルゴ': { hp: 1410, mp: 470, atk: 480, def: 820, spd: 240, wis: 630, sAction: '1', lAction: '1-3' },
-      'スライムコロネ': { hp: 1390, mp: 460, atk: 560, def: 420, spd: 440, wis: 560, sAction: '1', lAction: '1-3' },
-      'スライムつむり': { hp: 1430, mp: 520, atk: 400, def: 840, spd: 300, wis: 520, sAction: '1', lAction: '1-2' },
-      'スライムツリー': { hp: 1360, mp: 550, atk: 520, def: 320, spd: 490, wis: 670, sAction: '1', lAction: '1-3' },
-      'スライムナイト': { hp: 1330, mp: 420, atk: 580, def: 590, spd: 480, wis: 550, sAction: '1-2', lAction: '1-2' },
-      'スライムベス': { hp: 1490, mp: 400, atk: 510, def: 360, spd: 490, wis: 280, sAction: '1', lAction: '2-3' },
-      'ソルジャーブル': { hp: 1360, mp: 330, atk: 640, def: 530, spd: 510, wis: 400, sAction: '1', lAction: '1-3' },
-      'たけやりへい': { hp: 1400, mp: 310, atk: 580, def: 500, spd: 510, wis: 410, sAction: '1', lAction: '1-3' },
-      'ダッシュラン': { hp: 1340, mp: 340, atk: 620, def: 480, spd: 640, wis: 300, sAction: '1', lAction: '1-3' },
-      'タマゴロン': { hp: 1410, mp: 410, atk: 480, def: 580, spd: 480, wis: 450, sAction: '1', lAction: '2' },
-      'たまねぎスライム': { hp: 1410, mp: 430, atk: 510, def: 530, spd: 570, wis: 240, sAction: '1', lAction: '1-3' },
-      'ちゅうまじゅう': { hp: 1420, mp: 320, atk: 580, def: 570, spd: 430, wis: 410, sAction: '1', lAction: '1-3' },
-      'チンチロむし': { hp: 1300, mp: 440, atk: 500, def: 410, spd: 680, wis: 590, sAction: '1', lAction: '2-3' },
-      'テールイーター': { hp: 1410, mp: 530, atk: 580, def: 360, spd: 410, wis: 490, sAction: '1', lAction: '1-3' },
-      'デザートデーモン': { hp: 1370, mp: 380, atk: 600, def: 500, spd: 460, wis: 520, sAction: '1', lAction: '1-3' },
-      'デビルパイン': { hp: 1370, mp: 330, atk: 580, def: 540, spd: 530, wis: 430, sAction: '1', lAction: '2-3' },
-      'デンデン竜': { hp: 1400, mp: 310, atk: 650, def: 590, spd: 430, wis: 340, sAction: '1', lAction: '1-3' },
-      'とけぼうず': { hp: 1410, mp: 340, atk: 490, def: 540, spd: 480, wis: 540, sAction: '1', lAction: '1-3' },
-      'とさかへび': { hp: 1310, mp: 290, atk: 640, def: 460, spd: 640, wis: 450, sAction: '1', lAction: '1-3' },
-      'とらおとこ': { hp: 1350, mp: 340, atk: 590, def: 620, spd: 480, wis: 500, sAction: '1', lAction: '2-3' },
-      'ドラキー': { hp: 1260, mp: 490, atk: 480, def: 440, spd: 780, wis: 510, sAction: '1', lAction: '2' },
-      'ドラゴスライム': { hp: 1380, mp: 460, atk: 540, def: 380, spd: 580, wis: 400, sAction: '1', lAction: '1-3' },
-      'ドラゴンキッズ': { hp: 1450, mp: 470, atk: 530, def: 340, spd: 510, wis: 310, sAction: '1', lAction: '1-3' },
-      'ドラムゴート': { hp: 1400, mp: 460, atk: 610, def: 450, spd: 410, wis: 450, sAction: '1', lAction: '1-3' },
-      'ドルイド': { hp: 1340, mp: 510, atk: 410, def: 590, spd: 520, wis: 680, sAction: '1', lAction: '1-3' },
-      'トルトリーナ': { hp: 1330, mp: 470, atk: 580, def: 430, spd: 630, wis: 360, sAction: '1', lAction: '2' },
-      'ドロザラー': { hp: 1390, mp: 540, atk: 490, def: 540, spd: 430, wis: 520, sAction: '1', lAction: '1-3' },
-      'どろにんぎょう': { hp: 1380, mp: 460, atk: 610, def: 540, spd: 480, wis: 300, sAction: '1', lAction: '1-3' },
-      'ドロヌーバ': { hp: 1380, mp: 530, atk: 600, def: 590, spd: 310, wis: 540, sAction: '1', lAction: '1-3' },
-      'トロピカルスライム': { hp: 1400, mp: 380, atk: 470, def: 510, spd: 510, wis: 550, sAction: '1', lAction: '2-3' },
-      'ドロル': { hp: 1350, mp: 420, atk: 540, def: 500, spd: 590, wis: 420, sAction: '1', lAction: '2' },
-      'どんぐりベビー': { hp: 1420, mp: 450, atk: 590, def: 560, spd: 360, wis: 410, sAction: '1', lAction: '1-3' },
-      'ナイトウイプス': { hp: 1330, mp: 490, atk: 550, def: 410, spd: 530, wis: 620, sAction: '1', lAction: '1-3' },
-      'ナスビナーラ': { hp: 1360, mp: 610, atk: 490, def: 440, spd: 480, wis: 570, sAction: '1', lAction: '2' },
-      'ぬすっとウサギ': { hp: 1340, mp: 350, atk: 610, def: 430, spd: 590, wis: 460, sAction: '1', lAction: '2' },
-      'パールスライム': { hp: 1390, mp: 410, atk: 460, def: 610, spd: 470, wis: 560, sAction: '1', lAction: '1-3' },
-      'はなカワセミ': { hp: 1320, mp: 430, atk: 520, def: 540, spd: 620, wis: 470, sAction: '1', lAction: '1-3' },
-      'はなまきドラゴ': { hp: 1380, mp: 570, atk: 630, def: 370, spd: 450, wis: 380, sAction: '1', lAction: '1-3' },
-      'はねスライム': { hp: 1320, mp: 490, atk: 520, def: 360, spd: 640, wis: 550, sAction: '1', lAction: '2' },
-      'バブルスライム': { hp: 1440, mp: 660, atk: 460, def: 500, spd: 410, wis: 340, sAction: '1', lAction: '1-3' },
-      'はりつきあくま': { hp: 1360, mp: 470, atk: 460, def: 450, spd: 550, wis: 620, sAction: '1', lAction: '1-3' },
-      'ピクシードラゴン': { hp: 1320, mp: 440, atk: 490, def: 460, spd: 620, wis: 600, sAction: '1', lAction: '1-3' },
-      'ピッキー': { hp: 1320, mp: 550, atk: 590, def: 340, spd: 580, wis: 490, sAction: '1', lAction: '1-3' },
-      'ビッグハット': { hp: 1360, mp: 410, atk: 470, def: 630, spd: 490, wis: 600, sAction: '1', lAction: '1-3' },
-      'ビッグモアイ': { hp: 1400, mp: 410, atk: 560, def: 600, spd: 320, wis: 630, sAction: '1', lAction: '1-3' },
-      'びっくりサタン': { hp: 1360, mp: 460, atk: 410, def: 560, spd: 570, wis: 580, sAction: '1', lAction: '1-3' },
-      'ひとくいサーベル': { hp: 1330, mp: 360, atk: 600, def: 510, spd: 580, wis: 450, sAction: '1', lAction: '1-3' },
-      'ひとくいばこ': { hp: 1380, mp: 280, atk: 640, def: 590, spd: 450, wis: 430, sAction: '1', lAction: '1-3' },
-      'ファーラット': { hp: 1420, mp: 570, atk: 470, def: 420, spd: 390, wis: 610, sAction: '1', lAction: '1-3' },
-      'フーセンドラゴン': { hp: 1420, mp: 320, atk: 590, def: 590, spd: 410, wis: 410, sAction: '1', lAction: '1-2' },
-      'フェアリードラゴン': { hp: 1320, mp: 450, atk: 460, def: 250, spd: 800, wis: 500, sAction: '1', lAction: '1-3' },
-      'フォンデュ': { hp: 1390, mp: 480, atk: 500, def: 400, spd: 490, wis: 580, sAction: '1', lAction: '1-3' },
-      'プチアーノン': { hp: 1400, mp: 520, atk: 530, def: 460, spd: 400, wis: 560, sAction: '1', lAction: '1-3' },
-      'ぶちスライム': { hp: 1420, mp: 460, atk: 510, def: 450, spd: 510, wis: 370, sAction: '1', lAction: '1-3' },
-      'プテラノドン': { hp: 1370, mp: 360, atk: 580, def: 350, spd: 620, wis: 410, sAction: '1', lAction: '1-3' },
-      'ふゆうじゅ': { hp: 1440, mp: 430, atk: 580, def: 370, spd: 410, wis: 460, sAction: '1', lAction: '2' },
-      'フロッガー': { hp: 1410, mp: 360, atk: 560, def: 450, spd: 520, wis: 390, sAction: '1', lAction: '2' },
-      'ベビークラウド': { hp: 1370, mp: 320, atk: 580, def: 440, spd: 600, wis: 400, sAction: '1', lAction: '2' },
-      'ベビーサタン': { hp: 1300, mp: 310, atk: 570, def: 530, spd: 570, wis: 680, sAction: '1', lAction: '1-3' },
-      'ベビーパンサー': { hp: 1400, mp: 310, atk: 550, def: 550, spd: 570, wis: 300, sAction: '1', lAction: '1-3' },
-      'ポイズンリザード': { hp: 1380, mp: 430, atk: 610, def: 460, spd: 420, wis: 530, sAction: '1', lAction: '1-3' },
-      'ホイップゴースト': { hp: 1420, mp: 490, atk: 440, def: 540, spd: 460, wis: 490, sAction: '1', lAction: '1-3' },
-      'ホイミスライム': { hp: 1320, mp: 620, atk: 330, def: 420, spd: 660, wis: 700, sAction: '1', lAction: '2' },
-      'ボックススライム': { hp: 1420, mp: 640, atk: 450, def: 610, spd: 280, wis: 610, sAction: '1', lAction: '1-3' },
-      'ポンポコだぬき': { hp: 1350, mp: 350, atk: 580, def: 600, spd: 530, wis: 430, sAction: '1', lAction: '1-3' },
-      'マーマン': { hp: 1350, mp: 380, atk: 570, def: 600, spd: 530, wis: 420, sAction: '1', lAction: '2' },
-      'マグマスライム': { hp: 1350, mp: 410, atk: 530, def: 460, spd: 540, wis: 590, sAction: '1', lAction: '1-3' },
-      'マドハンド': { hp: 1420, mp: 550, atk: 560, def: 400, spd: 430, wis: 390, sAction: '1', lAction: '1-3' },
-      'まほうつかい': { hp: 1360, mp: 530, atk: 430, def: 440, spd: 550, wis: 630, sAction: '1', lAction: '1-3' },
-      'マンドラ': { hp: 1370, mp: 490, atk: 520, def: 450, spd: 520, wis: 500, sAction: '1', lAction: '1-3' },
-      'ミイラおとこ': { hp: 1400, mp: 420, atk: 580, def: 580, spd: 450, wis: 340, sAction: '1', lAction: '1-3' },
-      'ミステリドール': { hp: 1340, mp: 500, atk: 500, def: 550, spd: 490, wis: 610, sAction: '1', lAction: '1-3' },
-      'むくろカサゴ': { hp: 1430, mp: 440, atk: 570, def: 380, spd: 380, wis: 600, sAction: '1', lAction: '1-3' },
-      'メーダ': { hp: 1400, mp: 450, atk: 530, def: 400, spd: 460, wis: 570, sAction: '1', lAction: '1-3' },
-      'メソコボルト': { hp: 1360, mp: 390, atk: 520, def: 440, spd: 560, wis: 570, sAction: '1', lAction: '2-3' },
-      'メタッピー': { hp: 1400, mp: 490, atk: 470, def: 730, spd: 440, wis: 360, sAction: '1', lAction: '1-3' },
-      'メタルハンター': { hp: 1350, mp: 300, atk: 680, def: 540, spd: 520, wis: 360, sAction: '1-2', lAction: '1-2' },
-      'メラゴースト': { hp: 1400, mp: 520, atk: 350, def: 580, spd: 480, wis: 640, sAction: '1', lAction: '1-3' },
-      'モーモン': { hp: 1300, mp: 550, atk: 410, def: 440, spd: 700, wis: 590, sAction: '1', lAction: '1-3' },
-      'もみじこぞう': { hp: 1350, mp: 660, atk: 520, def: 330, spd: 610, wis: 350, sAction: '1', lAction: '1-3' },
-      'ももんじゃ': { hp: 1370, mp: 380, atk: 580, def: 620, spd: 520, wis: 320, sAction: '1', lAction: '1-3' },
-      'やみしばり': { hp: 1340, mp: 440, atk: 550, def: 430, spd: 530, wis: 610, sAction: '1', lAction: '1-3' },
-      'ゆめにゅうどう': { hp: 1390, mp: 460, atk: 460, def: 420, spd: 510, wis: 620, sAction: '1', lAction: '1-3' },
-      'ランタンこぞう': { hp: 1370, mp: 460, atk: 520, def: 590, spd: 430, wis: 570, sAction: '1', lAction: '1-3' },
-      'ランドセーラー': { hp: 1370, mp: 430, atk: 690, def: 410, spd: 460, wis: 380, sAction: '1', lAction: '1-3' },
-      'リップス': { hp: 1430, mp: 630, atk: 490, def: 530, spd: 370, wis: 400, sAction: '1', lAction: '1-3' },
-      'リリパット': { hp: 1460, mp: 470, atk: 480, def: 500, spd: 460, wis: 310, sAction: '1', lAction: '2' },
-      'わかめ王子': { hp: 1280, mp: 540, atk: 580, def: 520, spd: 510, wis: 640, sAction: '1', lAction: '1-3' },
-      'ワンワンダック': { hp: 1370, mp: 320, atk: 590, def: 520, spd: 550, wis: 400, sAction: '1', lAction: '1-3' },
-      '毒つぼドラゴン': { hp: 1380, mp: 340, atk: 690, def: 370, spd: 490, wis: 410, sAction: '1', lAction: '1-3' },
+      'アイアンタートル': { hp: 1380, mp: 560, atk: 430, def: 800, spd: 300, wis: 660, sAction: '1', lAction: '1-2', res: { fire: 50, water: 0, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 0, light: 0, dark: 25, weak: -25, illusion: 50, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 25 } },
+      'あおバチ騎兵': { hp: 1390, mp: 360, atk: 550, def: 510, spd: 530, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 25, light: 0, dark: 0, weak: 0, illusion: 0, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'アカリリス': { hp: 1370, mp: 380, atk: 530, def: 390, spd: 590, wis: 510, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 50, earth: 25, blast: 0, ice: 25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 0, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'アクアスライム': { hp: 1390, mp: 410, atk: 460, def: 460, spd: 570, wis: 510, sAction: '1', lAction: '2', res: { fire: 0, water: 100, wind: 25, earth: 0, blast: 0, ice: 0, lightning: 0, light: 50, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
+      'あくまのツボ': { hp: 1350, mp: 470, atk: 500, def: 590, spd: 480, wis: 580, sAction: '1', lAction: '2', res: { fire: 0, water: -25, wind: -25, earth: 50, blast: 0, ice: 25, lightning: 75, light: 0, dark: 50, weak: 0, illusion: 0, seal: -25, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 50 } },
+      'アニマルゾンビ': { hp: 1400, mp: 500, atk: 620, def: 400, spd: 480, wis: 300, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 25 } },
+      'あばれうしどり': { hp: 1330, mp: 390, atk: 620, def: 550, spd: 510, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'あばれこまいぬ': { hp: 1370, mp: 400, atk: 570, def: 470, spd: 480, wis: 550, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 0, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'アントベア': { hp: 1390, mp: 450, atk: 610, def: 380, spd: 470, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 50, blast: 25, ice: -25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 50, death: 0 } },
+      'イエティ': { hp: 1360, mp: 290, atk: 600, def: 570, spd: 540, wis: 420, sAction: '1', lAction: '2', res: { fire: -25, water: 25, wind: 50, earth: 0, blast: 0, ice: 100, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'いたずらもぐら': { hp: 1330, mp: 360, atk: 630, def: 580, spd: 540, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: 75, blast: 0, ice: -25, lightning: 0, light: -25, dark: 50, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 50, rest: 50, poison: 0, death: 0 } },
+      'いっかくうさぎ': { hp: 1300, mp: 380, atk: 570, def: 470, spd: 670, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 75, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 25, paralyze: 0, rest: 50, poison: 25, death: 0 } },
+      'いっかく竜': { hp: 1410, mp: 290, atk: 640, def: 540, spd: 480, wis: 290, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 50, light: 0, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 50, poison: -25, death: 0 } },
+      'いばらドラゴン': { hp: 1370, mp: 360, atk: 570, def: 610, spd: 530, wis: 350, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 25, blast: 50, ice: 0, lightning: 0, light: 50, dark: 0, weak: -25, illusion: 50, seal: 25, drain: 50, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
+      'インプ': { hp: 1350, mp: 460, atk: 470, def: 410, spd: 600, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 25, ice: 0, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: 0, rest: 0, poison: 0, death: 0 } },
+      'ウィングスネーク': { hp: 1360, mp: 310, atk: 540, def: 360, spd: 680, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: -25, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'おおがらす': { hp: 1310, mp: 420, atk: 560, def: 590, spd: 570, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 0, lightning: 0, light: -25, dark: 50, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
+      'おおきづち': { hp: 1450, mp: 300, atk: 630, def: 570, spd: 390, wis: 290, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 25, rest: 50, poison: 0, death: 0 } },
+      'オーク': { hp: 1350, mp: 380, atk: 570, def: 500, spd: 510, wis: 560, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'おおさそり': { hp: 1350, mp: 340, atk: 630, def: 650, spd: 480, wis: 390, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 25, earth: 50, blast: 50, ice: -25, lightning: 25, light: -25, dark: 25, weak: 0, illusion: 0, seal: -25, drain: 25, confusion: 0, sleep: 25, paralyze: 75, rest: -25, poison: 75, death: 0 } },
+      'おおにわとり': { hp: 1280, mp: 360, atk: 540, def: 460, spd: 690, wis: 600, sAction: '1', lAction: '2-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 25, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
+      'おおねずみ': { hp: 1360, mp: 350, atk: 580, def: 490, spd: 560, wis: 440, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
+      'おおめだま': { hp: 1350, mp: 440, atk: 560, def: 520, spd: 520, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 0, death: 25 } },
+      'オクトリーチ': { hp: 1410, mp: 420, atk: 600, def: 410, spd: 450, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 100, wind: 0, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
+      'オニオーン': { hp: 1400, mp: 620, atk: 490, def: 460, spd: 340, wis: 660, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 25, light: 50, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'おばけキノコ': { hp: 1350, mp: 430, atk: 580, def: 590, spd: 500, wis: 420, sAction: '1', lAction: '2-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: -25, paralyze: 25, rest: 25, poison: 50, death: 25 } },
+      'おばけキャンドル': { hp: 1390, mp: 400, atk: 480, def: 610, spd: 490, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: -25, earth: 50, blast: 25, ice: 25, lightning: 50, light: 0, dark: 0, weak: 25, illusion: -25, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 0, rest: 0, poison: 50, death: 50 } },
+      'おばけヒトデ': { hp: 1420, mp: 330, atk: 430, def: 520, spd: 510, wis: 390, sAction: '1', lAction: '1-3', res: { fire: -25, water: 75, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'がいこつ': { hp: 1420, mp: 290, atk: 610, def: 510, spd: 430, wis: 440, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 75, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: -25, paralyze: 50, rest: 0, poison: 50, death: 25 } },
+      'ガップリン': { hp: 1390, mp: 410, atk: 540, def: 470, spd: 510, wis: 460, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 100, blast: 0, ice: 0, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 75, death: 0 } },
+      'カバシラー': { hp: 1300, mp: 450, atk: 540, def: 430, spd: 690, wis: 460, sAction: '1', lAction: '2-3', res: { fire: 0, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: 25, light: 25, dark: 0, weak: 25, illusion: 0, seal: 25, drain: 25, confusion: 25, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
+      'かまいたち': { hp: 1320, mp: 570, atk: 590, def: 480, spd: 510, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 50, earth: -25, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 50, death: 0 } },
+      'からくりエッグ': { hp: 1380, mp: 400, atk: 570, def: 540, spd: 510, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'ギズモ': { hp: 1360, mp: 430, atk: 570, def: 350, spd: 510, wis: 620, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 50, ice: 50, lightning: 50, light: 0, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'ギャオース': { hp: 1350, mp: 320, atk: 690, def: 620, spd: 440, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: -25, blast: 0, ice: 50, lightning: 0, light: 50, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 50, paralyze: 0, rest: 25, poison: -25, death: 25 } },
+      'キャタピラー': { hp: 1340, mp: 400, atk: 590, def: 570, spd: 500, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'キャットフライ': { hp: 1310, mp: 430, atk: 450, def: 430, spd: 700, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 75, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'キラーコーン': { hp: 1300, mp: 550, atk: 610, def: 380, spd: 610, wis: 430, sAction: '1', lAction: '2-3', res: { fire: 0, water: 75, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 0, light: 0, dark: 50, weak: 50, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
+      'きりかぶおばけ': { hp: 1370, mp: 460, atk: 580, def: 590, spd: 460, wis: 390, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 25, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
+      'くさった死体': { hp: 1420, mp: 360, atk: 620, def: 530, spd: 400, wis: 390, sAction: '1', lAction: '2', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 25, poison: 50, death: 25 } },
+      'くしざしツインズ': { hp: 1370, mp: 440, atk: 570, def: 480, spd: 490, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'くびながイタチ': { hp: 1380, mp: 370, atk: 510, def: 470, spd: 580, wis: 460, sAction: '1', lAction: '2', res: { fire: 25, water: 0, wind: 50, earth: 25, blast: 0, ice: 25, lightning: 0, light: 0, dark: 25, weak: 25, illusion: 25, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 25, rest: 0, poison: 25, death: 0 } },
+      'くみひもこぞう': { hp: 1340, mp: 420, atk: 580, def: 390, spd: 550, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 0, blast: 0, ice: 50, lightning: 50, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'くらやみハーピー': { hp: 1320, mp: 500, atk: 510, def: 390, spd: 610, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 0, dark: 75, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 0, poison: 0, death: 0 } },
+      'グレムリン': { hp: 1370, mp: 650, atk: 450, def: 290, spd: 520, wis: 640, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 25, poison: 0, death: 0 } },
+      'クロコマーチ': { hp: 1400, mp: 610, atk: 600, def: 280, spd: 460, wis: 390, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'ぐんたいガニ': { hp: 1340, mp: 320, atk: 570, def: 720, spd: 520, wis: 420, sAction: '1', lAction: '1-2', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
+      'ゴースト': { hp: 1350, mp: 640, atk: 480, def: 270, spd: 570, wis: 590, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
+      'ゴールドマン': { hp: 1400, mp: 420, atk: 520, def: 580, spd: 380, wis: 600, sAction: '1', lAction: '2', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 0, ice: 0, lightning: 50, light: 50, dark: 0, weak: 50, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'コドラ': { hp: 1360, mp: 320, atk: 640, def: 490, spd: 590, wis: 290, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 25, blast: 50, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 25, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: -25, death: 25 } },
+      'サボテンボール': { hp: 1400, mp: 330, atk: 570, def: 520, spd: 490, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'さまようよろい': { hp: 1340, mp: 370, atk: 560, def: 680, spd: 490, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 25, illusion: -25, seal: 25, drain: 25, confusion: -25, sleep: 25, paralyze: 25, rest: 0, poison: 50, death: 25 } },
+      'さんぞくウルフ': { hp: 1320, mp: 360, atk: 550, def: 470, spd: 630, wis: 530, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: 25, earth: 25, blast: 0, ice: 25, lightning: 25, light: 0, dark: 25, weak: 50, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: 0, death: 0 } },
+      'シーメーダ': { hp: 1330, mp: 580, atk: 370, def: 360, spd: 690, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 25, water: 75, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: -25, rest: 0, poison: 25, death: 0 } },
+      'しましまキャット': { hp: 1360, mp: 480, atk: 560, def: 510, spd: 480, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 25, death: 25 } },
+      'シャドー': { hp: 1290, mp: 440, atk: 480, def: 490, spd: 670, wis: 610, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: -25, dark: 100, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
+      'ジャングラー': { hp: 1390, mp: 310, atk: 690, def: 380, spd: 460, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 0, earth: 0, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'ジャンボドラキー': { hp: 1430, mp: 430, atk: 530, def: 560, spd: 310, wis: 610, sAction: '1', lAction: '2-3', res: { fire: 0, water: 25, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 0, light: -25, dark: 75, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 25, sleep: -25, paralyze: 50, rest: -25, poison: 50, death: 25 } },
+      'スカイドラゴン': { hp: 1360, mp: 320, atk: 600, def: 530, spd: 530, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: -25, blast: 50, ice: 0, lightning: 25, light: 25, dark: 0, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'スカルガルー': { hp: 1370, mp: 450, atk: 630, def: 380, spd: 450, wis: 530, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 25 } },
+      'スカルライダー': { hp: 1400, mp: 430, atk: 520, def: 370, spd: 480, wis: 600, sAction: '1-2', lAction: '1-2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 0, poison: 50, death: 0 } },
+      'スキッパー': { hp: 1340, mp: 380, atk: 560, def: 630, spd: 530, wis: 450, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'ズッキーニャ': { hp: 1330, mp: 460, atk: 590, def: 560, spd: 490, wis: 500, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 50, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
+      'スノーム': { hp: 1390, mp: 480, atk: 510, def: 580, spd: 390, wis: 580, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: -25, blast: 50, ice: 100, lightning: 50, light: 0, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 25, poison: 0, death: 0 } },
+      'スマイルリザード': { hp: 1430, mp: 360, atk: 460, def: 350, spd: 630, wis: 390, sAction: '1', lAction: '2', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 25, light: 25, dark: 0, weak: -25, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 50, poison: -25, death: 25 } },
+      'スモーク': { hp: 1290, mp: 450, atk: 540, def: 580, spd: 590, wis: 550, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: -25, earth: 25, blast: 0, ice: 25, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 25, confusion: 0, sleep: 0, paralyze: 25, rest: 0, poison: 25, death: 25 } },
+      'スライム': { hp: 1420, mp: 410, atk: 460, def: 380, spd: 650, wis: 310, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 0, lightning: 75, light: 50, dark: -25, weak: 0, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 0, poison: 25, death: 0 } },
+      'スライムカルゴ': { hp: 1410, mp: 470, atk: 480, def: 820, spd: 240, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 50, lightning: 50, light: 25, dark: -25, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'スライムコロネ': { hp: 1390, mp: 460, atk: 560, def: 420, spd: 440, wis: 560, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 0, earth: -25, blast: 50, ice: 25, lightning: 50, light: 0, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'スライムつむり': { hp: 1430, mp: 520, atk: 400, def: 840, spd: 300, wis: 520, sAction: '1', lAction: '1-2', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 50, lightning: 50, light: 25, dark: -25, weak: 0, illusion: 50, seal: 50, drain: -25, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 25, death: 0 } },
+      'スライムツリー': { hp: 1360, mp: 550, atk: 520, def: 320, spd: 490, wis: 670, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: 0, blast: 25, ice: 25, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
+      'スライムナイト': { hp: 1330, mp: 420, atk: 580, def: 590, spd: 480, wis: 550, sAction: '1-2', lAction: '1-2', res: { fire: 25, water: 25, wind: 25, earth: -25, blast: 25, ice: 25, lightning: 50, light: 25, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
+      'スライムベス': { hp: 1490, mp: 400, atk: 510, def: 360, spd: 490, wis: 280, sAction: '1', lAction: '2-3', res: { fire: 50, water: 0, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 25, poison: 0, death: 0 } },
+      'ソルジャーブル': { hp: 1360, mp: 330, atk: 640, def: 530, spd: 510, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
+      'たけやりへい': { hp: 1400, mp: 310, atk: 580, def: 500, spd: 510, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 0, blast: 0, ice: 50, lightning: 50, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'ダッシュラン': { hp: 1340, mp: 340, atk: 620, def: 480, spd: 640, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
+      'タマゴロン': { hp: 1410, mp: 410, atk: 480, def: 580, spd: 480, wis: 450, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: 25, earth: 0, blast: 25, ice: 0, lightning: 75, light: 50, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'たまねぎスライム': { hp: 1410, mp: 430, atk: 510, def: 530, spd: 570, wis: 240, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 50, seal: 0, drain: -25, confusion: 50, sleep: 0, paralyze: 50, rest: 25, poison: 0, death: 0 } },
+      'ちゅうまじゅう': { hp: 1420, mp: 320, atk: 580, def: 570, spd: 430, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 25, earth: 50, blast: 25, ice: 25, lightning: 25, light: 0, dark: 0, weak: 25, illusion: 25, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'チンチロむし': { hp: 1300, mp: 440, atk: 500, def: 410, spd: 680, wis: 590, sAction: '1', lAction: '2-3', res: { fire: -25, water: 0, wind: -25, earth: 50, blast: 0, ice: 25, lightning: 50, light: 50, dark: 25, weak: 25, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 0, death: 0 } },
+      'テールイーター': { hp: 1410, mp: 530, atk: 580, def: 360, spd: 410, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 0, dark: 25, weak: -25, illusion: 0, seal: 0, drain: 50, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'デザートデーモン': { hp: 1370, mp: 380, atk: 600, def: 500, spd: 460, wis: 520, sAction: '1', lAction: '1-3', res: { fire: 50, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 25, dark: 0, weak: 50, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 0, poison: 0, death: 0 } },
+      'デビルパイン': { hp: 1370, mp: 330, atk: 580, def: 540, spd: 530, wis: 430, sAction: '1', lAction: '2-3', res: { fire: 25, water: 50, wind: 0, earth: 0, blast: 0, ice: 50, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 25, death: 25 } },
+      'デンデン竜': { hp: 1400, mp: 310, atk: 650, def: 590, spd: 430, wis: 340, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 0, blast: 50, ice: 0, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 0, paralyze: 50, rest: 50, poison: -25, death: 0 } },
+      'とけぼうず': { hp: 1410, mp: 340, atk: 490, def: 540, spd: 480, wis: 540, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 75, ice: 0, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 25 } },
+      'とさかへび': { hp: 1310, mp: 290, atk: 640, def: 460, spd: 640, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 0, earth: -25, blast: 100, ice: 0, lightning: 0, light: 50, dark: 25, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 0, rest: 25, poison: 25, death: 0 } },
+      'とらおとこ': { hp: 1350, mp: 340, atk: 590, def: 620, spd: 480, wis: 500, sAction: '1', lAction: '2-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'ドラキー': { hp: 1260, mp: 490, atk: 480, def: 440, spd: 780, wis: 510, sAction: '1', lAction: '2', res: { fire: 25, water: 25, wind: 50, earth: 25, blast: 0, ice: 0, lightning: -25, light: 0, dark: 50, weak: 25, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 25 } },
+      'ドラゴスライム': { hp: 1380, mp: 460, atk: 540, def: 380, spd: 580, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 0, earth: -25, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'ドラゴンキッズ': { hp: 1450, mp: 470, atk: 530, def: 340, spd: 510, wis: 310, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 0, paralyze: 25, rest: 75, poison: -25, death: 0 } },
+      'ドラムゴート': { hp: 1400, mp: 460, atk: 610, def: 450, spd: 410, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
+      'ドルイド': { hp: 1340, mp: 510, atk: 410, def: 590, spd: 520, wis: 680, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 0 } },
+      'トルトリーナ': { hp: 1330, mp: 470, atk: 580, def: 430, spd: 630, wis: 360, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: -25, earth: 25, blast: 0, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 50, death: 50 } },
+      'ドロザラー': { hp: 1390, mp: 540, atk: 490, def: 540, spd: 430, wis: 520, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'どろにんぎょう': { hp: 1380, mp: 460, atk: 610, def: 540, spd: 480, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'ドロヌーバ': { hp: 1380, mp: 530, atk: 600, def: 590, spd: 310, wis: 540, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: -25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 25 } },
+      'トロピカルスライム': { hp: 1400, mp: 380, atk: 470, def: 510, spd: 510, wis: 550, sAction: '1', lAction: '2-3', res: { fire: 25, water: 25, wind: 0, earth: 0, blast: 0, ice: 25, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 25, seal: 25, drain: -25, confusion: 0, sleep: 50, paralyze: 50, rest: 0, poison: 25, death: 0 } },
+      'ドロル': { hp: 1350, mp: 420, atk: 540, def: 500, spd: 590, wis: 420, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 25, rest: 0, poison: 50, death: 25 } },
+      'どんぐりベビー': { hp: 1420, mp: 450, atk: 590, def: 560, spd: 360, wis: 410, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 50, blast: -25, ice: 25, lightning: 50, light: 0, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'ナイトウイプス': { hp: 1330, mp: 490, atk: 550, def: 410, spd: 530, wis: 620, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 75, blast: 0, ice: 0, lightning: 50, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 25 } },
+      'ナスビナーラ': { hp: 1360, mp: 610, atk: 490, def: 440, spd: 480, wis: 570, sAction: '1', lAction: '2', res: { fire: 0, water: 50, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
+      'ぬすっとウサギ': { hp: 1340, mp: 350, atk: 610, def: 430, spd: 590, wis: 460, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 0, death: 0 } },
+      'パールスライム': { hp: 1390, mp: 410, atk: 460, def: 610, spd: 470, wis: 560, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: -25, blast: 25, ice: 25, lightning: 25, light: 25, dark: 0, weak: 25, illusion: 25, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'はなカワセミ': { hp: 1320, mp: 430, atk: 520, def: 540, spd: 620, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 50, earth: 50, blast: 50, ice: 25, lightning: 0, light: -25, dark: 0, weak: 0, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 50, rest: -25, poison: 0, death: 25 } },
+      'はなまきドラゴ': { hp: 1380, mp: 570, atk: 630, def: 370, spd: 450, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'はねスライム': { hp: 1320, mp: 490, atk: 520, def: 360, spd: 640, wis: 550, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: 75, earth: -25, blast: 25, ice: 0, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 75, rest: 25, poison: 0, death: 0 } },
+      'バブルスライム': { hp: 1440, mp: 660, atk: 460, def: 500, spd: 410, wis: 340, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: -25, blast: 25, ice: 25, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: -25, paralyze: 50, rest: 0, poison: 75, death: 0 } },
+      'はりつきあくま': { hp: 1360, mp: 470, atk: 460, def: 450, spd: 550, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 0, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: 0, rest: 0, poison: 0, death: 0 } },
+      'ピクシードラゴン': { hp: 1320, mp: 440, atk: 490, def: 460, spd: 620, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 25, earth: 0, blast: 50, ice: 25, lightning: 25, light: 0, dark: 0, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 25 } },
+      'ピッキー': { hp: 1320, mp: 550, atk: 590, def: 340, spd: 580, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 25, light: -25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'ビッグハット': { hp: 1360, mp: 410, atk: 470, def: 630, spd: 490, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 0, seal: 25, drain: 75, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'ビッグモアイ': { hp: 1400, mp: 410, atk: 560, def: 600, spd: 320, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'びっくりサタン': { hp: 1360, mp: 460, atk: 410, def: 560, spd: 570, wis: 580, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 0, dark: 50, weak: 25, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 0 } },
+      'ひとくいサーベル': { hp: 1330, mp: 360, atk: 600, def: 510, spd: 580, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'ひとくいばこ': { hp: 1380, mp: 280, atk: 640, def: 590, spd: 450, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 50, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'ファーラット': { hp: 1420, mp: 570, atk: 470, def: 420, spd: 390, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 25, seal: 0, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
+      'フーセンドラゴン': { hp: 1420, mp: 320, atk: 590, def: 590, spd: 410, wis: 410, sAction: '1', lAction: '1-2', res: { fire: 50, water: -25, wind: 50, earth: 0, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'フェアリードラゴン': { hp: 1320, mp: 450, atk: 460, def: 250, spd: 800, wis: 500, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 25, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: -25, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 25, rest: 50, poison: -25, death: 0 } },
+      'フォンデュ': { hp: 1390, mp: 480, atk: 500, def: 400, spd: 490, wis: 580, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 25, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'プチアーノン': { hp: 1400, mp: 520, atk: 530, def: 460, spd: 400, wis: 560, sAction: '1', lAction: '1-3', res: { fire: -25, water: 100, wind: 0, earth: 50, blast: -25, ice: 0, lightning: -25, light: 25, dark: 50, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'ぶちスライム': { hp: 1420, mp: 460, atk: 510, def: 450, spd: 510, wis: 370, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: -25, blast: 50, ice: 25, lightning: 50, light: 25, dark: -25, weak: 25, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'プテラノドン': { hp: 1370, mp: 360, atk: 580, def: 350, spd: 620, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: -25, blast: 50, ice: 0, lightning: 25, light: 0, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 25 } },
+      'ふゆうじゅ': { hp: 1440, mp: 430, atk: 580, def: 370, spd: 410, wis: 460, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 0, poison: 50, death: 25 } },
+      'フロッガー': { hp: 1410, mp: 360, atk: 560, def: 450, spd: 520, wis: 390, sAction: '1', lAction: '2', res: { fire: 25, water: 75, wind: 0, earth: 25, blast: -25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'ベビークラウド': { hp: 1370, mp: 320, atk: 580, def: 440, spd: 600, wis: 400, sAction: '1', lAction: '2', res: { fire: 50, water: 25, wind: -25, earth: 50, blast: 0, ice: 0, lightning: 25, light: 0, dark: 25, weak: 25, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 25, death: 25 } },
+      'ベビーサタン': { hp: 1300, mp: 310, atk: 570, def: 530, spd: 570, wis: 680, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 25, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 50 } },
+      'ベビーパンサー': { hp: 1400, mp: 310, atk: 550, def: 550, spd: 570, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 25, rest: 50, poison: 0, death: 25 } },
+      'ポイズンリザード': { hp: 1380, mp: 430, atk: 610, def: 460, spd: 420, wis: 530, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 0, blast: 50, ice: 25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 50, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 25, death: 0 } },
+      'ホイップゴースト': { hp: 1420, mp: 490, atk: 440, def: 540, spd: 460, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 25, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
+      'ホイミスライム': { hp: 1320, mp: 620, atk: 330, def: 420, spd: 660, wis: 700, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 25, sleep: 0, paralyze: 50, rest: 0, poison: 0, death: 25 } },
+      'ボックススライム': { hp: 1420, mp: 640, atk: 450, def: 610, spd: 280, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: -25, blast: 25, ice: 0, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 0, poison: 0, death: 0 } },
+      'ポンポコだぬき': { hp: 1350, mp: 350, atk: 580, def: 600, spd: 530, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: -25, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 50, rest: 50, poison: 25, death: 0 } },
+      'マーマン': { hp: 1350, mp: 380, atk: 570, def: 600, spd: 530, wis: 420, sAction: '1', lAction: '2', res: { fire: 0, water: 75, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 25, poison: 25, death: 0 } },
+      'マグマスライム': { hp: 1350, mp: 410, atk: 530, def: 460, spd: 540, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 100, water: -25, wind: 0, earth: 25, blast: 0, ice: -25, lightning: 0, light: 100, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
+      'マドハンド': { hp: 1420, mp: 550, atk: 560, def: 400, spd: 430, wis: 390, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 25, ice: 50, lightning: 25, light: 0, dark: 0, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
+      'まほうつかい': { hp: 1360, mp: 530, atk: 430, def: 440, spd: 550, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 0, earth: 0, blast: 25, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 50, drain: 75, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: -25, death: 25 } },
+      'マンドラ': { hp: 1370, mp: 490, atk: 520, def: 450, spd: 520, wis: 500, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: 25, blast: 0, ice: 25, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 50, sleep: 0, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'ミイラおとこ': { hp: 1400, mp: 420, atk: 580, def: 580, spd: 450, wis: 340, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 25, earth: 50, blast: 25, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'ミステリドール': { hp: 1340, mp: 500, atk: 500, def: 550, spd: 490, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 0, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
+      'むくろカサゴ': { hp: 1430, mp: 440, atk: 570, def: 380, spd: 380, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 0, ice: 25, lightning: 0, light: 0, dark: 75, weak: 25, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
+      'メーダ': { hp: 1400, mp: 450, atk: 530, def: 400, spd: 460, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 25, death: 0 } },
+      'メソコボルト': { hp: 1360, mp: 390, atk: 520, def: 440, spd: 560, wis: 570, sAction: '1', lAction: '2-3', res: { fire: 25, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'メタッピー': { hp: 1400, mp: 490, atk: 470, def: 730, spd: 440, wis: 360, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
+      'メタルハンター': { hp: 1350, mp: 300, atk: 680, def: 540, spd: 520, wis: 360, sAction: '1-2', lAction: '1-2', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 50, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
+      'メラゴースト': { hp: 1400, mp: 520, atk: 350, def: 580, spd: 480, wis: 640, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: -25, lightning: 0, light: 50, dark: 0, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 25, rest: 25, poison: 50, death: 0 } },
+      'モーモン': { hp: 1300, mp: 550, atk: 410, def: 440, spd: 700, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 25, earth: 0, blast: 50, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: -25, rest: 50, poison: 25, death: 25 } },
+      'もみじこぞう': { hp: 1350, mp: 660, atk: 520, def: 330, spd: 610, wis: 350, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
+      'ももんじゃ': { hp: 1370, mp: 380, atk: 580, def: 620, spd: 520, wis: 320, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 50, earth: 0, blast: 25, ice: 25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 25 } },
+      'やみしばり': { hp: 1340, mp: 440, atk: 550, def: 430, spd: 530, wis: 610, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 75, weak: 0, illusion: -25, seal: 75, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'ゆめにゅうどう': { hp: 1390, mp: 460, atk: 460, def: 420, spd: 510, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 0, dark: 50, weak: -25, illusion: 25, seal: 75, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      'ランタンこぞう': { hp: 1370, mp: 460, atk: 520, def: 590, spd: 430, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 25, water: -25, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 25 } },
+      'ランドセーラー': { hp: 1370, mp: 430, atk: 690, def: 410, spd: 460, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 25, ice: 0, lightning: -25, light: -25, dark: 75, weak: 50, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 0, death: 25 } },
+      'リップス': { hp: 1430, mp: 630, atk: 490, def: 530, spd: 370, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: -25, illusion: 0, seal: 50, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
+      'リリパット': { hp: 1460, mp: 470, atk: 480, def: 500, spd: 460, wis: 310, sAction: '1', lAction: '2', res: { fire: 25, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: -25, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 25 } },
+      'わかめ王子': { hp: 1280, mp: 540, atk: 580, def: 520, spd: 510, wis: 640, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 25, blast: 0, ice: 25, lightning: 0, light: 25, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
+      'ワンワンダック': { hp: 1370, mp: 320, atk: 590, def: 520, spd: 550, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: 50, blast: 25, ice: 50, lightning: -25, light: 25, dark: -25, weak: 50, illusion: -25, seal: 25, drain: 25, confusion: 25, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 0 } },
+      '毒つぼドラゴン': { hp: 1380, mp: 340, atk: 690, def: 370, spd: 490, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 25, blast: 50, ice: 0, lightning: -25, light: 25, dark: 50, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: 25, death: 0 } },
     };
 
     const inputIds = [
@@ -1696,11 +2065,348 @@
       }
     }
 
+    let currentSkillSlot = 1;
+    const currentSkills = { 1: '', 2: '', 3: '' };
+    let currentAccessory = '';
+
+    // スキル定義: 各スキルにステータス増値と耐性値を持たせる
+    const skillCategories = {
+      stat: [
+        { name: '攻撃力アップ1', stats: { atk: 32, hp: 12 }, res: {} },
+        { name: '攻撃力アップ2', stats: { atk: 48, hp: 16 }, res: {} },
+        { name: '攻撃力アップ3', stats: { atk: 80, hp: 24 }, res: { weak: 25 } },
+        { name: '攻撃力アップ4', stats: { atk: 200 }, res: {} },
+        { name: '守備力アップ1', stats: { def: 52, hp: 12 }, res: {} },
+        { name: '守備力アップ2', stats: { def: 96, hp: 16 }, res: {} },
+        { name: '守備力アップ3', stats: { def: 160, hp: 24 }, res: { weak: 25 } },
+        { name: '守備力アップ4', stats: { def: 400 }, res: {} },
+        { name: 'すばやさアップ1', stats: { spd: 32, hp: 12 }, res: {} },
+        { name: 'すばやさアップ2', stats: { spd: 48, hp: 16 }, res: {} },
+        { name: 'すばやさアップ3', stats: { spd: 80, hp: 24 }, res: { weak: 25 } },
+        { name: 'すばやさアップ4', stats: { spd: 200 }, res: {} },
+        { name: 'かしこさアップ1', stats: { wis: 52, mp: 16 }, res: {} },
+        { name: 'かしこさアップ2', stats: { wis: 96, mp: 32 }, res: {} },
+        { name: 'かしこさアップ3', stats: { wis: 160, mp: 64 }, res: { weak: 25 } },
+        { name: 'かしこさアップ4', stats: { wis: 400 }, res: {} },
+        { name: 'HPアップ1', stats: { hp: 52 }, res: {} },
+        { name: 'HPアップ2', stats: { hp: 76 }, res: {} },
+        { name: 'HPアップ3', stats: { hp: 100 }, res: {} },
+        { name: 'HPアップ4', stats: { hp: 200 }, res: {} },
+        { name: 'MPアップ1', stats: { mp: 80 }, res: {} },
+        { name: 'MPアップ2', stats: { mp: 128 }, res: {} },
+        { name: 'MPアップ3', stats: { mp: 192 }, res: { drain: 25 } },
+        { name: 'MPアップ4', stats: { mp: 400 }, res: {} }
+      ],
+      attack: [
+        { name: '火の極意', stats: { mp: 40 } },
+        { name: '水の極意', stats: { mp: 40 } },
+        { name: '風の極意', stats: { mp: 40 } },
+        { name: '地の極意', stats: { mp: 40 } },
+        { name: '爆発の極意', stats: { mp: 40 } },
+        { name: '氷結の極意', stats: { mp: 40 } },
+        { name: '電撃の極意', stats: { mp: 40 } },
+        { name: '光の極意', stats: { mp: 40 } },
+        { name: '闇の極意', stats: { mp: 40 } },
+      ],
+      guard: [
+        { name: '火ガード', stats: { hp: 16, mp: 16, wis: 48 }, res: { fire: 25 } },
+        { name: '水ガード', stats: { hp: 8, mp: 32, wis: 48 }, res: { water: 25 } },
+        { name: '風ガード', stats: { mp: 32, spd: 8, wis: 48 }, res: { wind: 25 } },
+        { name: '地ガード', stats: { hp: 8, mp: 32, atk: 8, def: 32 }, res: { earth: 25 } },
+        { name: '爆発ガード', stats: { def: 30 }, res: { blast: 25 } },
+        { name: '氷結ガード', stats: { mp: 32, def: 16, wis: 48 }, res: { ice: 25 } },
+        { name: '電撃ガード', stats: { spd: 30 }, res: { lightning: 25 } },
+        { name: '光ガード', stats: { hp: 16, mp: 16, spd: 8, wis: 32 }, res: { light: 25 } },
+        { name: '闇ガード', stats: { mp: 48, wis: 48 }, res: { dark: 25 } },
+        { name: 'ウルトラガードSP', stats: {}, res: { drain: 25, water: 25, rest: 25, illusion: 25, earth: 25, confusion: 25, ice: 25, seal: 25 } },
+        { name: 'スーパーガードSP', stats: {}, res: { drain: 25, fire: 25, poison: 25, illusion: 25, lightning: 25, paralyze: 25, light: 25, weak: 25 } },
+        { name: 'ミラクルガードSP', stats: {}, res: { drain: 25, poison: 25, dark: 25, death: 25, blast: 25, illusion: 25, wind: 25, sleep: 25 } }
+      ]
+    };
+
+    const accessoryCategories = {
+      stat: [
+        { name: 'ちからのゆびわ', stats: { atk: 10 } },
+        { name: 'いのちのゆびわ', stats: { hp: 10 } },
+      ],
+      res: [
+        { name: '炎のリング', stats: { def: 20 }, res: { fire: 25 } },
+      ]
+    };
+
+    // スキル辞書
+    const allSkillsMap = {};
+    Object.values(skillCategories).forEach(list => {
+      list.forEach(item => {
+        allSkillsMap[item.name] = item;
+      });
+    });
+
+    // アクセサリー辞書
+    const allAccessoriesMap = {};
+    Object.values(accessoryCategories).forEach(list => {
+      list.forEach(item => {
+        allAccessoriesMap[item.name] = item;
+      });
+    });
+
+    // 耐性定義リスト
+    const resElemList = [
+      { id: 'fire', name: '火', defaultVal: 0 },
+      { id: 'water', name: '水', defaultVal: 0 },
+      { id: 'wind', name: '風', defaultVal: 0 },
+      { id: 'earth', name: '地', defaultVal: 0 },
+      { id: 'blast', name: '爆発', defaultVal: 0 },
+      { id: 'ice', name: '氷結', defaultVal: 0 },
+      { id: 'lightning', name: '電撃', defaultVal: 0 },
+      { id: 'light', name: '光', defaultVal: 0 },
+      { id: 'dark', name: '闇', defaultVal: 0 }
+    ];
+
+    const resAilmentList = [
+      { id: 'weak', name: '弱体化', defaultVal: 0 },
+      { id: 'illusion', name: '幻惑', defaultVal: 0 },
+      { id: 'seal', name: '封じ', defaultVal: 0 },
+      { id: 'drain', name: 'MP吸収', defaultVal: 0 },
+      { id: 'confusion', name: '混乱', defaultVal: 0 },
+      { id: 'sleep', name: '眠り', defaultVal: 0 },
+      { id: 'paralyze', name: 'マヒ', defaultVal: 0 },
+      { id: 'rest', name: '休み', defaultVal: 0 },
+      { id: 'poison', name: '毒', defaultVal: 0 },
+      { id: 'death', name: '即死', defaultVal: 0 }
+    ];
+
+    const statLabels = { hp: 'HP', mp: 'MP', atk: '攻', def: '守', spd: '早', wis: '賢' };
+    const resLabels = {
+      fire: '火', water: '水', wind: '風', earth: '地', blast: '爆',
+      ice: '氷', lightning: '雷', light: '光', dark: '闇',
+      weak: '弱体', illusion: '幻惑', seal: '封じ', drain: 'MP吸',
+      confusion: '混乱', sleep: '眠り', paralyze: 'マヒ', rest: '休み',
+      poison: '毒', death: '即死'
+    };
+
+    function formatBonuses(stats, res) {
+      const parts = [];
+      if (stats) {
+        Object.entries(stats).forEach(([k, v]) => {
+          if (v) parts.push(`<span class="item-stat-badge">${statLabels[k] || k}+${v}</span>`);
+        });
+      }
+      if (res) {
+        Object.entries(res).forEach(([k, v]) => {
+          if (v) parts.push(`<span class="item-res-badge">${resLabels[k] || k}+${v}</span>`);
+        });
+      }
+      return parts.join(' ');
+    }
+
+    // スキルモーダルの開閉関数
+    function openSkillModal(slot) {
+      currentSkillSlot = slot || 1;
+      const title = document.getElementById('skill-modal-title');
+      if (title) title.textContent = `スキル${currentSkillSlot} 選択`;
+      switchSkillTab('stat');
+      const modal = document.getElementById('skill-modal');
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 背景スクロール防止
+      }
+    }
+
+    function closeSkillModal() {
+      const modal = document.getElementById('skill-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function switchSkillTab(category) {
+      document.querySelectorAll('#skill-modal .skill-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(category));
+      });
+      const container = document.getElementById('skill-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // 未設定クリアボタン
+      const clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.className = 'skill-item-btn';
+      clearBtn.style.color = 'var(--red-text)';
+      clearBtn.textContent = '✕ 未設定にする';
+      clearBtn.onclick = () => selectSkill('');
+      container.appendChild(clearBtn);
+
+      const list = skillCategories[category] || [];
+      list.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'skill-item-btn';
+        if (currentSkills[currentSkillSlot] === item.name) {
+          btn.style.borderColor = 'var(--accent-hover)';
+          btn.style.background = 'rgba(37, 99, 235, 0.2)';
+        }
+        const bonusHtml = formatBonuses(item.stats, item.res);
+        btn.innerHTML = `<div class="item-card-title">${item.name}</div>${bonusHtml ? `<div class="item-card-desc">${bonusHtml}</div>` : ''}`;
+        btn.onclick = () => selectSkill(item.name);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectSkill(skillName) {
+      currentSkills[currentSkillSlot] = skillName;
+      const btn = document.getElementById(`skill-btn-${currentSkillSlot}`);
+      if (btn) {
+        btn.textContent = skillName || '未設定';
+        btn.classList.toggle('has-skill', !!skillName);
+      }
+      closeSkillModal();
+      calculate();
+      saveToLocalStorage();
+    }
+
+    // アクセサリーモーダルの開閉関数
+    function openAccessoryModal() {
+      switchAccessoryTab('stat');
+      const modal = document.getElementById('accessory-modal');
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeAccessoryModal() {
+      const modal = document.getElementById('accessory-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function switchAccessoryTab(category) {
+      document.querySelectorAll('#accessory-modal .skill-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `acc-tab-${category}`);
+      });
+      const container = document.getElementById('accessory-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // 未設定クリアボタン
+      const clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.className = 'skill-item-btn';
+      clearBtn.style.color = 'var(--red-text)';
+      clearBtn.textContent = '✕ 未設定にする';
+      clearBtn.onclick = () => selectAccessory('');
+      container.appendChild(clearBtn);
+
+      const list = accessoryCategories[category] || [];
+      list.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'skill-item-btn';
+        if (currentAccessory === item.name) {
+          btn.style.borderColor = 'var(--accent-hover)';
+          btn.style.background = 'rgba(37, 99, 235, 0.2)';
+        }
+        const bonusHtml = formatBonuses(item.stats, item.res);
+        btn.innerHTML = `<div class="item-card-title">${item.name}</div>${bonusHtml ? `<div class="item-card-desc">${bonusHtml}</div>` : ''}`;
+        btn.onclick = () => selectAccessory(item.name);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectAccessory(accName) {
+      currentAccessory = accName;
+      const btn = document.getElementById('accessory-btn');
+      if (btn) {
+        btn.textContent = accName || '未設定';
+        btn.classList.toggle('has-accessory', !!accName);
+      }
+      closeAccessoryModal();
+      calculate();
+      saveToLocalStorage();
+    }
+
+    // 耐性テーブル動的描画
+    function updateResistanceTable() {
+      const guardBody = document.getElementById('guard-body');
+      if (!guardBody) return;
+
+      // 選択されているモンスターの個別耐性値を取得
+      const monsterSelect = document.getElementById('monster-select');
+      const selectedMonster = monsterSelect ? monsterSelect.value : '';
+      const monsterRes = (selectedMonster && monsterData[selectedMonster]?.res) ? monsterData[selectedMonster].res : null;
+
+      // 各スキルの耐性加算値 (①, ②, ③)
+      const s1Name = currentSkills[1];
+      const s1Res = (s1Name && allSkillsMap[s1Name]?.res) || {};
+      const s2Name = currentSkills[2];
+      const s2Res = (s2Name && allSkillsMap[s2Name]?.res) || {};
+      const s3Name = currentSkills[3];
+      const s3Res = (s3Name && allSkillsMap[s3Name]?.res) || {};
+
+      // アクセサリーの耐性加算値 (ア)
+      const accRes = (currentAccessory && allAccessoriesMap[currentAccessory]?.res) || {};
+
+      // 耐性値の表示クラス判定: 0未満は赤色、1~99は青色、100以上は金色、0は通常
+      function getResClass(val) {
+        if (val >= 100) return 'res-high';
+        if (val >= 1) return 'res-mid';
+        if (val < 0) return 'res-weak';
+        return 'res-zero';
+      }
+
+      function formatRes(val) {
+        return val > 0 ? `+${val}` : `${val}`;
+      }
+
+      // 単一耐性セルの生成 (値 + ①②③アのマーク)
+      function buildResCell(item) {
+        if (!item) {
+          return `<td style="color:var(--text-muted);">-</td><td class="res-zero">-</td>`;
+        }
+
+        const id = item.id;
+        // モンスターが選択されている場合は種族固有の耐性値を基準値に、未選択なら defaultVal
+        const baseVal = (monsterRes && monsterRes[id] !== undefined) ? monsterRes[id] : item.defaultVal;
+
+        const s1Val = s1Res[id] || 0;
+        const s2Val = s2Res[id] || 0;
+        const s3Val = s3Res[id] || 0;
+        const accVal = accRes[id] || 0;
+
+        const totalVal = baseVal + s1Val + s2Val + s3Val + accVal;
+
+        // スキル1・2・3およびアクセでの上昇マーク付与
+        let marks = '';
+        if (s1Val > 0) marks += `<span class="res-mark res-mark-s1" title="スキル1 (${s1Name}): +${s1Val}">①</span>`;
+        if (s2Val > 0) marks += `<span class="res-mark res-mark-s2" title="スキル2 (${s2Name}): +${s2Val}">②</span>`;
+        if (s3Val > 0) marks += `<span class="res-mark res-mark-s3" title="スキル3 (${s3Name}): +${s3Val}">③</span>`;
+        if (accVal > 0) marks += `<span class="res-mark res-mark-acc" title="アクセ (${currentAccessory}): +${accVal}">ア</span>`;
+
+        const valHtml = `<div class="res-val-box"><span class="${getResClass(totalVal)}">${formatRes(totalVal)}</span>${marks}</div>`;
+        return `<td>${item.name}</td><td>${valHtml}</td>`;
+      }
+
+      let rowsHtml = '';
+      const rowCount = Math.max(resElemList.length, resAilmentList.length);
+      for (let i = 0; i < rowCount; i++) {
+        const elem = resElemList[i];
+        const ail = resAilmentList[i];
+        rowsHtml += `<tr>${buildResCell(elem)}${buildResCell(ail)}</tr>`;
+      }
+      guardBody.innerHTML = rowsHtml;
+    }
+
     // ESCキーでモーダルを閉じる
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeMatrixModal();
         closePersonalityModal();
+        closeSkillModal();
+        closeAccessoryModal();
       }
     });
 
@@ -1806,16 +2512,35 @@
       if (gpBonusEl) {
         if (hasGPBonus) {
           gpBonusEl.className = 'gp-bonus-badge gp-bonus-active';
-          gpBonusEl.textContent = '祖父母ボーナス発生中！';
+          gpBonusEl.textContent = 'ボーナス発生中';
         } else {
           gpBonusEl.className = 'gp-bonus-badge gp-bonus-inactive';
-          gpBonusEl.textContent = '祖父母ボーナスなし（異なる4系統で発生）';
+          gpBonusEl.textContent = 'ボーナスなし';
         }
       }
 
       const personalityCorr = personalityMap[personality] || null;
       const aiRates = actionTraitMultipliers[ai] || actionTraitMultipliers['1'];
       const sizeRates = sizeMultipliers[size] || sizeMultipliers['S'];
+
+      // スキルによるステータス加算値の集計
+      const skillBonus = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, wis: 0 };
+      [1, 2, 3].forEach(slot => {
+        const sName = currentSkills[slot];
+        if (sName && allSkillsMap[sName]?.stats) {
+          Object.entries(allSkillsMap[sName].stats).forEach(([k, v]) => {
+            if (skillBonus[k] !== undefined) skillBonus[k] += v;
+          });
+        }
+      });
+
+      // アクセサリーによるステータス加算値の集計
+      const accBonus = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, wis: 0 };
+      if (currentAccessory && allAccessoriesMap[currentAccessory]?.stats) {
+        Object.entries(allAccessoriesMap[currentAccessory].stats).forEach(([k, v]) => {
+          if (accBonus[k] !== undefined) accBonus[k] += v;
+        });
+      }
 
       const finalValues = {};
       statsConfig.forEach((stat) => {
@@ -1844,17 +2569,21 @@
         // 性格補正
         const corrVal = personalityCorr ? personalityCorr[stat.id] || 0 : 0;
 
-        // 最終ステータス = Math.ceil(基準値 * 倍率) + 系図 + 性格補正
-        const finalStat = baseScaled + boost + corrVal;
+        // スキル加算値 & アクセ加算値
+        const sVal = skillBonus[stat.id] || 0;
+        const aVal = accBonus[stat.id] || 0;
+
+        // 最終ステータス = Math.ceil(基準値 * 倍率) + 系図 + 性格補正 + スキル + アクセ
+        const finalStat = baseScaled + boost + corrVal + sVal + aVal;
         finalValues[stat.id] = finalStat;
 
         // 各要素の更新
-        const coeffElem = document.getElementById('coeff-' + stat.id);
         const boostElem = document.getElementById('boost-' + stat.id);
         const corrElem = document.getElementById('corr-' + stat.id);
+        const skillElem = document.getElementById('skill-stat-' + stat.id);
+        const accElem = document.getElementById('acc-stat-' + stat.id);
         const finalElem = document.getElementById('final-' + stat.id);
 
-        if (coeffElem) coeffElem.textContent = totalCoeff.toFixed(1);
         if (boostElem) boostElem.textContent = '+' + boost.toLocaleString();
         if (corrElem) {
           if (corrVal > 0) {
@@ -1868,10 +2597,19 @@
             corrElem.textContent = '0';
           }
         }
+        if (skillElem) {
+          skillElem.textContent = sVal > 0 ? '+' + sVal : '+0';
+          skillElem.className = sVal > 0 ? 'col-skill has-value' : 'col-skill';
+        }
+        if (accElem) {
+          accElem.textContent = aVal > 0 ? '+' + aVal : '+0';
+          accElem.className = aVal > 0 ? 'col-acc has-value' : 'col-acc';
+        }
         if (finalElem) finalElem.textContent = finalStat.toLocaleString();
       });
 
       updateChartValues(finalValues);
+      updateResistanceTable();
       saveToLocalStorage();
     }
 
@@ -1914,6 +2652,8 @@
       });
       const sizeRadio = document.querySelector('input[name="size"]:checked');
       if (sizeRadio) data['size'] = sizeRadio.value;
+      data['skills'] = currentSkills;
+      data['accessory'] = currentAccessory;
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1945,6 +2685,26 @@
               `input[name="size"][value="${data['size']}"]`
             );
             if (targetRadio) targetRadio.checked = true;
+          }
+          if (data['skills']) {
+            [1, 2, 3].forEach((slot) => {
+              if (data['skills'][slot]) {
+                currentSkills[slot] = data['skills'][slot];
+                const btn = document.getElementById(`skill-btn-${slot}`);
+                if (btn) {
+                  btn.textContent = currentSkills[slot];
+                  btn.classList.add('has-skill');
+                }
+              }
+            });
+          }
+          if (data['accessory']) {
+            currentAccessory = data['accessory'];
+            const accBtn = document.getElementById('accessory-btn');
+            if (accBtn) {
+              accBtn.textContent = currentAccessory;
+              accBtn.classList.add('has-accessory');
+            }
           }
         }
         const savedTab = localStorage.getItem('dqm3_status_tab');
