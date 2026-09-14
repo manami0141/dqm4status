@@ -211,6 +211,39 @@
       min-width: 0;
     }
 
+    /* モーダル用セレクトボタン */
+    .modal-select-btn {
+      width: 100%;
+      height: 38px;
+      padding: 6px 10px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: bold;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .modal-select-btn:focus,
+    .modal-select-btn:hover {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .modal-select-btn::after {
+      content: '▼';
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
     /* サイズ選択のボタンスタイル */
     .size-toggle-box {
       display: flex;
@@ -453,9 +486,52 @@
       color: var(--text-sub);
     }
 
-    /* 祖父母ボーナス表示バッジ */
+    /* 祖父母ボーナス表示バッジとボタンのレイアウト */
+    .action-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: stretch;
+    }
+
+    @media (min-width: 650px) {
+      .action-row {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    .btn-matrix {
+      background-color: var(--card-inner);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-matrix:hover {
+      background-color: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent-color);
+      color: var(--highlight);
+    }
+
+    .btn-matrix svg {
+      width: 16px;
+      height: 16px;
+    }
+
     .gp-bonus-badge {
-      margin-top: 10px;
+      display: inline-block;
       padding: 8px 14px;
       border-radius: 8px;
       text-align: center;
@@ -478,6 +554,92 @@
       font-size: 0.82rem;
     }
 
+    /* モーダル関連 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-content {
+      position: relative;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      width: 92%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 10000;
+      animation: modalFadeIn 0.25s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-15px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h3 {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 1.6rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #f87171;
+    }
+
+    /* 表関連のスタイル */
     .table-wrapper {
       overflow-x: auto;
     }
@@ -486,7 +648,6 @@
       border-collapse: collapse;
     }
 
-    /* 系統対応表・性格対応表はPCやタブレットで横に間延びしないようコンテンツ幅にフィット */
     .table-fit-content {
       width: auto !important;
       max-width: 100%;
@@ -539,7 +700,6 @@
       font-size: 0.8rem;
     }
 
-    /* 性格対応表のスタイル (+200は+100と一目でわかるように特化デザイン) */
     .personality-plus-200 {
       background: var(--gold-bg);
       border: 1.5px solid var(--gold-border);
@@ -608,7 +768,7 @@
       word-break: break-word;
     }
 
-    /* スマートフォン・小型画面向け最適化 (横スクロール防止・1列目の文字を縦に折り返し) */
+    /* スマートフォン・小型画面向け最適化 */
     @media (max-width: 650px) {
       body {
         padding: 8px 6px;
@@ -660,7 +820,8 @@
         flex: 0 0 auto;
       }
 
-      .config-cell select {
+      .config-cell select,
+      .modal-select-btn {
         height: 34px;
         font-size: 0.88rem;
       }
@@ -720,6 +881,21 @@
         font-size: 0.86rem;
       }
 
+      /* アクション行（ボタンとバッジ）のスマホ最適化 */
+      .action-row {
+        gap: 8px;
+      }
+
+      .btn-matrix {
+        width: 100%;
+        padding: 10px;
+      }
+
+      .gp-bonus-badge {
+        display: inline-block;
+        width: 100%;
+      }
+
       /* 対応表: 横スクロール不要で1画面内に完全収容 */
       .table-wrapper {
         width: 100%;
@@ -745,7 +921,6 @@
         vertical-align: middle;
       }
 
-      /* 1列目 (系統・性格): 縦に折り返してコンパクトに表示 */
       .matrix-table th:first-child,
       .matrix-table td:first-child,
       .matrix-table .stat-name,
@@ -760,7 +935,6 @@
         text-align: center !important;
       }
 
-      /* 2〜7列目 (HP, MP, 攻撃, 守備, 素早, 賢さ): 均等配分で表示 */
       .matrix-table th:not(:first-child),
       .matrix-table td:not(:first-child),
       .table-fit-content th:not(:first-child),
@@ -822,22 +996,10 @@
 
         <!-- 2. 性格 -->
         <div class="config-cell">
-          <label for="personality">性格</label>
-          <select id="personality">
-            <option value="いのちしらず">いのちしらず</option>
-            <option value="がんばりや">がんばりや</option>
-            <option value="きまぐれ">きまぐれ</option>
-            <option value="じょうねつか">じょうねつか</option>
-            <option value="せっきょくてき">せっきょくてき</option>
-            <option value="たかびしゃ">たかびしゃ</option>
-            <option value="ちょとつもうしん">ちょとつもうしん</option>
-            <option value="にんじょうか">にんじょうか</option>
-            <option value="まけずぎらい">まけずぎらい</option>
-            <option value="まじめ" selected>まじめ</option>
-            <option value="ゆうかん">ゆうかん</option>
-            <option value="らくてんか">らくてんか</option>
-            <option value="れいせい">れいせい</option>
-          </select>
+          <label for="personality-btn">性格</label>
+          <input type="hidden" id="personality" value="まじめ">
+          <button type="button" id="personality-btn" class="modal-select-btn"
+            onclick="openPersonalityModal()">まじめ</button>
         </div>
 
         <!-- 3. サイズ -->
@@ -1096,39 +1258,41 @@
               </select>
             </div>
           </div>
-        </div>
-
-        <!-- 祖父母ボーナス表示 -->
-        <div id="gp-bonus-display" class="gp-bonus-badge gp-bonus-inactive">
-          祖父母ボーナス：なし（4体すべて異なる系統で発生）
+          <!-- 祖父母ボーナス表示と系統対応表ボタン -->
+          <div class="action-row">
+            <button type="button" class="btn-matrix" onclick="openMatrixModal()">
+              系統対応表を確認
+            </button>
+            <div id="gp-bonus-display" class="gp-bonus-badge gp-bonus-inactive">
+              祖父母ボーナスなし（異なる4系統で発生）
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="grid-container">
-      <!-- 性格対応表 (+200の箇所は+100と一目でわかる特化スタイル) -->
-      <div class="card" id="personality-card">
-        <div class="table-wrapper">
-          <p style="font-size: 0.6rem; padding-left: 1rem;">行クリックで選択</p>
-          <table class="matrix-table table-fit-content">
-            <thead>
-              <tr>
-                <th>性格</th>
-                <th>HP</th>
-                <th>MP</th>
-                <th>攻撃</th>
-                <th>守備</th>
-                <th>素早</th>
-                <th>賢さ</th>
-              </tr>
-            </thead>
-            <tbody id="personality-matrix-body">
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- 系統ステータス対応表 -->
-      <div class="card" id="matrix-card">
+    <!-- 捕捉 -->
+    <div class="info-box">
+      <strong>捕捉</strong>
+      <ul>
+        <li><strong>最終ステータス計算式</strong>：<code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
+        <li><strong>倍率計算式</strong>：<code>特性補正 × サイズ補正</code></li>
+        <li><strong>系図計算式</strong>：<code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
+        <li><strong>祖父母ボーナス</strong>：祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
+        <li>入力内容はブラウザのローカルストレージへ自動保存されます。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- モーダル: 系統対応表 -->
+  <div id="matrix-modal" class="modal">
+    <div class="modal-overlay" onclick="closeMatrixModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>系統対応表</h3>
+        <button class="modal-close" onclick="closeMatrixModal()" title="閉じる">&times;</button>
+      </div>
+      <div class="modal-body">
         <div class="table-wrapper">
           <table class="matrix-table table-fit-content">
             <thead>
@@ -1148,17 +1312,36 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- 捕捉 -->
-    <div class="info-box">
-      <strong>捕捉</strong>
-      <ul>
-        <li><strong>最終ステータス計算式</strong>：<code>Math.ceil(基準値 × 倍率) + 系図 + 性格補正</code></li>
-        <li><strong>倍率計算式</strong>：<code>特性補正 × サイズ補正</code></li>
-        <li><strong>系図計算式</strong>：<code>Math.floor(基準値 × 合計系統係数 × 子プラス値 / 2500)</code></li>
-        <li><strong>祖父母ボーナス</strong>：祖父母4体の系統がすべて異なる場合、全ステータスの係数に <code>+1.0</code></li>
-        <li>入力内容はブラウザのローカルストレージへ自動保存されます。</li>
-      </ul>
+  <!-- モーダル: 性格対応表 -->
+  <div id="personality-modal" class="modal">
+    <div class="modal-overlay" onclick="closePersonalityModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>性格対応表</h3>
+        <button class="modal-close" onclick="closePersonalityModal()" title="閉じる">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrapper">
+          <p style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 8px; text-align: center;">行クリックで選択</p>
+          <table class="matrix-table table-fit-content">
+            <thead>
+              <tr>
+                <th>性格</th>
+                <th>HP</th>
+                <th>MP</th>
+                <th>攻撃</th>
+                <th>守備</th>
+                <th>素早</th>
+                <th>賢さ</th>
+              </tr>
+            </thead>
+            <tbody id="personality-matrix-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1479,6 +1662,48 @@
       }
     }
 
+    // 系統対応表モーダルの開閉関数
+    function openMatrixModal() {
+      const modal = document.getElementById('matrix-modal');
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 背景スクロール防止
+      }
+    }
+
+    function closeMatrixModal() {
+      const modal = document.getElementById('matrix-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    // 性格対応表モーダルの開閉関数
+    function openPersonalityModal() {
+      const modal = document.getElementById('personality-modal');
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 背景スクロール防止
+      }
+    }
+
+    function closePersonalityModal() {
+      const modal = document.getElementById('personality-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMatrixModal();
+        closePersonalityModal();
+      }
+    });
+
     function renderMatrixTable() {
       const tbody = document.getElementById('matrix-body');
       if (!tbody) return;
@@ -1502,7 +1727,7 @@
       const tbody = document.getElementById('personality-matrix-body');
       if (!tbody) return;
       tbody.innerHTML = '';
-      const currentSelected = document.getElementById('personality')?.value;
+      const currentSelected = document.getElementById('personality')?.value || 'まじめ';
 
       Object.entries(personalityMap).forEach(([name, corrections]) => {
         const tr = document.createElement('tr');
@@ -1511,12 +1736,17 @@
         }
         tr.style.cursor = 'pointer';
         tr.title = `${name} を選択`;
+
+        // 行クリックで性格を選択してモーダルを閉じる
         tr.addEventListener('click', () => {
-          const select = document.getElementById('personality');
-          if (select) {
-            select.value = name;
+          const hiddenInput = document.getElementById('personality');
+          const btn = document.getElementById('personality-btn');
+          if (hiddenInput && btn) {
+            hiddenInput.value = name;
+            btn.textContent = name;
             calculate();
             renderPersonalityTable();
+            closePersonalityModal();
           }
         });
 
@@ -1576,10 +1806,10 @@
       if (gpBonusEl) {
         if (hasGPBonus) {
           gpBonusEl.className = 'gp-bonus-badge gp-bonus-active';
-          gpBonusEl.textContent = '✨ 祖父母ボーナス発生中！（全ステータス係数 +1.0）';
+          gpBonusEl.textContent = '祖父母ボーナス発生中！';
         } else {
           gpBonusEl.className = 'gp-bonus-badge gp-bonus-inactive';
-          gpBonusEl.textContent = '祖父母ボーナス：なし（4体すべて異なる系統で発生）';
+          gpBonusEl.textContent = '祖父母ボーナスなし（異なる4系統で発生）';
         }
       }
 
@@ -1700,7 +1930,14 @@
           inputIds.forEach((id) => {
             if (data[id] !== undefined) {
               const elem = document.getElementById(id);
-              if (elem) elem.value = data[id];
+              if (elem) {
+                elem.value = data[id];
+                // 性格ボタンのテキストも同期させる
+                if (id === 'personality') {
+                  const btn = document.getElementById('personality-btn');
+                  if (btn) btn.textContent = data[id];
+                }
+              }
             }
           });
           if (data['size']) {
@@ -1745,24 +1982,19 @@
 
       // 全入力・選択項目のイベント
       document.querySelectorAll('input, select').forEach((elem) => {
-        if (elem.name === 'size' || elem.id === 'monster-select') return;
+        // 非表示のinputやsize, monster-selectはスキップ
+        if (elem.name === 'size' || elem.id === 'monster-select' || elem.type === 'hidden') return;
         elem.addEventListener('input', () => {
           if (elem.id.startsWith('stat-')) {
             checkMonsterStatsSync();
           }
           calculate();
-          if (elem.id === 'personality') {
-            renderPersonalityTable();
-          }
         });
         elem.addEventListener('change', () => {
           if (elem.id.startsWith('stat-')) {
             checkMonsterStatsSync();
           }
           calculate();
-          if (elem.id === 'personality') {
-            renderPersonalityTable();
-          }
         });
       });
     }
