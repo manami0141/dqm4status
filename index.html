@@ -900,8 +900,18 @@
       text-shadow: 0 0 5px rgba(250, 204, 21, 0.35);
     }
 
-    .res-mid {
-      color: #60a5fa !important;
+    .res-75 {
+      color: #60faf5 !important;
+      font-weight: 700 !important;
+    }
+
+    .res-50 {
+      color: #60a8fa !important;
+      font-weight: 700 !important;
+    }
+
+    .res-25 {
+      color: #8e60fa !important;
       font-weight: 700 !important;
     }
 
@@ -2358,7 +2368,9 @@
       // 耐性値の表示クラス判定: 0未満は赤色、1~99は青色、100以上は金色、0は通常
       function getResClass(val) {
         if (val >= 100) return 'res-high';
-        if (val >= 1) return 'res-mid';
+        if (val >= 75) return 'res-75';
+        if (val >= 50) return 'res-50';
+        if (val >= 25) return 'res-25';
         if (val < 0) return 'res-weak';
         return 'res-zero';
       }
