@@ -2126,8 +2126,8 @@
 
     const accessoryCategories = {
       stat: [
-        { name: 'ちからのゆびわ', stats: { atk: 10 } },
-        { name: 'いのちのゆびわ', stats: { hp: 10 } },
+        { name: '力のゆびわ', stats: { atk: 10 } },
+        { name: '命のゆびわ', stats: { hp: 10 } },
       ],
       res: [
         { name: '炎のリング', stats: { def: 20 }, res: { fire: 25 } },
@@ -2350,6 +2350,11 @@
       // アクセサリーの耐性加算値 (ア)
       const accRes = (currentAccessory && allAccessoriesMap[currentAccessory]?.res) || {};
 
+      //Lサイズ補正の加算値
+      const currentSize = document.querySelector('input[name="size"]:checked')?.value || 'S';
+      const lSizeResistBonus = { confusion: 50, sleep: 50, paralyze: 50, rest: 50, poison: 50, death: 50 };
+      const lRes = (currentSize === 'L') ? lSizeResistBonus : {};
+
       // 耐性値の表示クラス判定: 0未満は赤色、1~99は青色、100以上は金色、0は通常
       function getResClass(val) {
         if (val >= 100) return 'res-high';
@@ -2376,8 +2381,9 @@
         const s2Val = s2Res[id] || 0;
         const s3Val = s3Res[id] || 0;
         const accVal = accRes[id] || 0;
+        const lResVal = lRes[id] || 0;
 
-        const totalVal = baseVal + s1Val + s2Val + s3Val + accVal;
+        const totalVal = baseVal + s1Val + s2Val + s3Val + accVal + lResVal;
 
         // スキル1・2・3およびアクセでの上昇マーク付与
         let marks = '';
