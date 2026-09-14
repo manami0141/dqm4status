@@ -2578,8 +2578,11 @@
         const sizeRate = sizeRates[stat.id] ?? 1.0;
         const rate = aiRate * sizeRate;
 
+        // 丸め誤差対策
+        const rounded = (val) => Math.round(val * 10000) / 10000;
+
         // 基準値 * 倍率 (切り上げ Math.ceil)
-        const baseScaled = Math.ceil(cap * rate);
+        const baseScaled = Math.ceil(rounded(cap * rate));
 
         // 系図: floor(基準値 × 合計係数 × 子プラス値 / 2500)
         const boost = Math.floor((cap * totalCoeff * plus) / 2500);
