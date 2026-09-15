@@ -1797,7 +1797,7 @@
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 75vh;">
         <!-- 検索・フィルターコントロール -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <input type="text" id="monster-search-input" placeholder="種族名で絞込み"
               style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
               oninput="filterMonsterList()">
@@ -1811,6 +1811,12 @@
               <option value="def-desc">守備力が高い順</option>
               <option value="spd-desc">素早さが高い順</option>
               <option value="wis-desc">賢さが高い順</option>
+              <option value="res-desc" selected>耐性順</option>
+            </select>
+            <select id="monster-display-res-select"
+              style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
+              onchange="filterMonsterList()">
+              <option value="rest" selected>休み</option>
             </select>
           </div>
 
@@ -2137,11 +2143,25 @@
       select.innerHTML = html;
     }
 
+    function initMonsterDisplayResSelect() {
+      const select = document.getElementById('monster-display-res-select');
+      if (!select || select.options.length > 1) return;
+
+      let html = '';
+      const allRes = [...resElemList, ...resAilmentList];
+      allRes.forEach(item => {
+        const isSelected = item.id === 'rest' ? ' selected' : '';
+        html += `<option value="${item.id}"${isSelected}>${resLabels[item.id] || item.name}</option>`;
+      });
+      select.innerHTML = html;
+    }
+
     function openMonsterModal() {
       const modal = document.getElementById('monster-modal');
       if (modal) {
         modal.style.display = 'flex';
         initMonsterTraitSelect();
+        initMonsterDisplayResSelect();
         filterMonsterList();
       }
     }
@@ -2156,12 +2176,14 @@
     function clearMonsterFilter() {
       const sInput = document.getElementById('monster-search-input');
       const tSelect = document.getElementById('monster-trait-select');
+      const dSelect = document.getElementById('monster-display-res-select');
       const sortSelect = document.getElementById('monster-sort-select');
       if (sInput) sInput.value = '';
       if (tSelect) tSelect.value = '';
+      if (dSelect) dSelect.value = 'rest';
       const incRadio = document.querySelector('input[name="include-l-trait"][value="include"]');
       if (incRadio) incRadio.checked = true;
-      if (sortSelect) sortSelect.value = 'name';
+      if (sortSelect) sortSelect.value = 'res-desc';
       filterMonsterList();
     }
 
@@ -2172,7 +2194,8 @@
       const query = normalizeStr(document.getElementById('monster-search-input')?.value || '');
       const selectedTrait = document.getElementById('monster-trait-select')?.value || '';
       const includeL = document.querySelector('input[name="include-l-trait"]:checked')?.value === 'include';
-      const sortKey = document.getElementById('monster-sort-select')?.value || 'name';
+      const sortKey = document.getElementById('monster-sort-select')?.value || 'res-desc';
+      const displayResId = document.getElementById('monster-display-res-select')?.value || 'rest';
 
       let list = Object.keys(monsterData).map(name => ({
         name,
@@ -2210,6 +2233,12 @@
         list.sort((a, b) => b.spd - a.spd);
       } else if (sortKey === 'wis-desc') {
         list.sort((a, b) => b.wis - a.wis);
+      } else if (sortKey === 'res-desc') {
+        list.sort((a, b) => {
+          const valA = (a.res && displayResId && a.res[displayResId] !== undefined) ? a.res[displayResId] : 0;
+          const valB = (b.res && displayResId && b.res[displayResId] !== undefined) ? b.res[displayResId] : 0;
+          return valB - valA;
+        });
       } else {
         list.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
       }
@@ -2221,9 +2250,23 @@
 
       let html = '';
       list.forEach(m => {
+        let resBadgeHtml = '';
+        if (displayResId && m.res && m.res[displayResId] !== undefined) {
+          const rVal = m.res[displayResId];
+          const rStr = rVal > 0 ? `+${rVal}` : `${rVal}`;
+          let rClass = 'res-zero';
+          if (rVal >= 100) rClass = 'res-high';
+          else if (rVal >= 75) rClass = 'res-75';
+          else if (rVal >= 50) rClass = 'res-50';
+          else if (rVal >= 25) rClass = 'res-25';
+          else if (rVal < 0) rClass = 'res-weak';
+          resBadgeHtml = `<span class="${rClass}" style="font-weight: 700; font-size: 0.75rem; padding: 1px 5px; background: var(--bg-color); border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;">${resLabels[displayResId] || displayResId} ${rStr}</span>`;
+        }
+
         html += `
-          <div onclick="selectMonsterFromModal('${m.name}')" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
-            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-color);">${m.name}</div>
+          <div onclick="selectMonsterFromModal('${m.name}')" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; gap: 6px;" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.name}</div>
+            ${resBadgeHtml}
           </div>
         `;
       });
@@ -2245,6 +2288,20 @@
       saveToLocalStorage();
     }
 
+    // スキルやアクセによる追加特性の判定
+    function getSkillAccessoryBonusTraits() {
+      const traitSet = new Set();
+      [1, 2, 3].forEach(slot => {
+        const sName = currentSkills[slot];
+        if (!sName) return;
+        const skillObj = allSkillsMap[sName];
+        if (skillObj && skillObj.traits) {
+          skillObj.traits.forEach(t => traitSet.add(t));
+        }
+      });
+      return Array.from(traitSet);
+    }
+
     // 所持特性バッジの更新
     function updateMonsterTraitsDisplay() {
       const container = document.getElementById('monster-traits-box');
@@ -2252,24 +2309,37 @@
       if (!container || !chipsWrapper) return;
 
       const name = document.getElementById('monster-select')?.value;
-      if (!name || !monsterData[name] || !monsterData[name].sTraits) {
-        container.style.display = 'none';
-        return;
-      }
-
-      const m = monsterData[name];
+      const m = (name && monsterData[name]) ? monsterData[name] : null;
       const sizeRadio = document.querySelector('input[name="size"]:checked');
       const size = sizeRadio ? sizeRadio.value : 'S';
 
       let html = '';
-      (m.sTraits || []).forEach((tName) => {
-        html += `<span class="trait-chip">${tName}</span>`;
+      let hasTrait = false;
+
+      if (m && m.sTraits) {
+        (m.sTraits || []).forEach((tName) => {
+          html += `<span class="trait-chip">${tName}</span>`;
+          hasTrait = true;
+        });
+
+        if (size === 'L' && m.lTraits && m.lTraits.length > 0) {
+          m.lTraits.forEach((tName) => {
+            html += `<span class="trait-chip l-trait">${tName}</span>`;
+            hasTrait = true;
+          });
+        }
+      }
+
+      // スキル等による追加特性
+      const extraTraits = getSkillAccessoryBonusTraits();
+      extraTraits.forEach((tName) => {
+        html += `<span class="trait-chip" style="border-color: var(--accent-color);">${tName}</span>`;
+        hasTrait = true;
       });
 
-      if (size === 'L' && m.lTraits && m.lTraits.length > 0) {
-        m.lTraits.forEach((tName) => {
-          html += `<span class="trait-chip l-trait">${tName}</span>`;
-        });
+      if (!hasTrait) {
+        container.style.display = 'none';
+        return;
       }
 
       chipsWrapper.innerHTML = html;
@@ -2400,7 +2470,7 @@
         { name: 'かしこさアップ4', stats: { wis: 400 }, res: {} },
         { name: 'HPアップ1', stats: { hp: 52 }, res: {} },
         { name: 'HPアップ2', stats: { hp: 76 }, res: {} },
-        { name: 'HPアップ3', stats: { hp: 100 }, res: {} },
+        { name: 'HPアップ3', stats: { hp: 100 }, res: {}, traits: ['自動HP回復'] },
         { name: 'HPアップ4', stats: { hp: 200 }, res: {} },
         { name: 'MPアップ1', stats: { mp: 80 }, res: {} },
         { name: 'MPアップ2', stats: { mp: 128 }, res: {} },
@@ -2425,25 +2495,25 @@
         { name: '稲妻ガードSP', stats: { hp: 64, mp: 128 }, res: { seal: 25, paralyze: 25, lightning: 25, light: 25 } },
         { name: '溶岩ガードSP', stats: { hp: 64, mp: 128 }, res: { weak: 25, illusion: 25, fire: 25, earth: 25 } },
         { name: '流氷ガードSP', stats: { hp: 64, mp: 128 }, res: { weak: 25, seal: 25, ice: 25, water: 25 } },
-        { name: '弱体化ガード', stats: { hp: 16, mp: 16, atk: 16, def: 16 }, res: { weak: 25 } },
-        { name: '幻惑ガード', stats: { hp: 8, mp: 32, atk: 8, wis: 16 }, res: { illusion: 25 } },
-        { name: '封じガード', stats: { mp: 48, wis: 48 }, res: { seal: 25 } },
-        { name: 'MP吸収ガード', stats: { mp: 48, spd: 24 }, res: { drain: 25 } },
-        { name: '混乱ガード', stats: { hp: 24, def: 48 }, res: { confusion: 25 } },
-        { name: '眠りガード', stats: { hp: 24, spd: 24 }, res: { sleep: 25 } },
-        { name: '麻痺ガード', stats: { hp: 24, def: 32, spd: 8 }, res: { paralysis: 25 } },
-        { name: '休みガード', stats: { hp: 16, def: 32, spd: 16 }, res: { rest: 25 } },
-        { name: '毒ガード', stats: { hp: 24, mp: 48 }, res: { poison: 25 } },
-        { name: '即死ガード', stats: { hp: 24, mp: 48 }, res: { death: 25 } },
-        { name: '火ガード', stats: { hp: 16, mp: 16, wis: 48 }, res: { fire: 25 } },
-        { name: '水ガード', stats: { hp: 8, mp: 32, wis: 48 }, res: { water: 25 } },
-        { name: '風ガード', stats: { mp: 32, spd: 8, wis: 48 }, res: { wind: 25 } },
-        { name: '地ガード', stats: { hp: 8, mp: 32, atk: 8, def: 32 }, res: { earth: 25 } },
-        { name: '爆発ガード', stats: { def: 30 }, res: { blast: 25 } },
-        { name: '氷結ガード', stats: { mp: 32, def: 16, wis: 48 }, res: { ice: 25 } },
-        { name: '電撃ガード', stats: { spd: 30 }, res: { lightning: 25 } },
-        { name: '光ガード', stats: { hp: 16, mp: 16, spd: 8, wis: 32 }, res: { light: 25 } },
-        { name: '闇ガード', stats: { mp: 48, wis: 48 }, res: { dark: 25 } },
+        { name: '弱体化ガード', stats: { hp: 16, mp: 16, atk: 16, def: 16 }, res: { weak: 25 }, traits: ['自動MP回復'] },
+        { name: '幻惑ガード', stats: { hp: 8, mp: 32, atk: 8, wis: 16 }, res: { illusion: 25 }, traits: ['自動MP回復'] },
+        { name: '封じガード', stats: { mp: 48, wis: 48 }, res: { seal: 25 }, traits: ['自動MP回復'] },
+        { name: 'MP吸収ガード', stats: { mp: 48, spd: 24 }, res: { drain: 25 }, traits: ['自動MP回復'] },
+        { name: '混乱ガード', stats: { hp: 24, def: 48 }, res: { confusion: 25 }, traits: ['自動HP回復'] },
+        { name: '眠りガード', stats: { hp: 24, spd: 24 }, res: { sleep: 25 }, traits: ['自動HP回復'] },
+        { name: 'マヒガード', stats: { hp: 24, def: 32, spd: 8 }, res: { paralyze: 25 }, traits: ['自動HP回復'] },
+        { name: '休みガード', stats: { hp: 16, def: 32, spd: 16 }, res: { rest: 25 }, traits: ['自動HP回復'] },
+        { name: '毒ガード', stats: { hp: 24, mp: 48 }, res: { poison: 25 }, traits: ['自動HP回復'] },
+        { name: '即死ガード', stats: { hp: 24, mp: 48 }, res: { death: 25 }, traits: ['自動HP回復'] },
+        { name: '火ガード', stats: { hp: 16, mp: 16, wis: 48 }, res: { fire: 25 }, traits: ['消費MP半分'] },
+        { name: '水ガード', stats: { hp: 8, mp: 32, wis: 48 }, res: { water: 25 }, traits: ['消費MP半分'] },
+        { name: '風ガード', stats: { mp: 32, spd: 8, wis: 48 }, res: { wind: 25 }, traits: ['消費MP半分'] },
+        { name: '地ガード', stats: { hp: 8, mp: 32, atk: 8, def: 32 }, res: { earth: 25 }, traits: ['消費MP半分'] },
+        { name: '爆発ガード', stats: { def: 30 }, res: { blast: 25 }, traits: ['消費MP半分'] },
+        { name: '氷結ガード', stats: { mp: 32, def: 16, wis: 48 }, res: { ice: 25 }, traits: ['消費MP半分'] },
+        { name: '電撃ガード', stats: { spd: 30 }, res: { lightning: 25 }, traits: ['消費MP半分'] },
+        { name: '光ガード', stats: { hp: 16, mp: 16, spd: 8, wis: 32 }, res: { light: 25 }, traits: ['消費MP半分'] },
+        { name: '闇ガード', stats: { mp: 48, wis: 48 }, res: { dark: 25 }, traits: ['消費MP半分'] },
         { name: 'ウルトラガードSP', stats: {}, res: { drain: 25, water: 25, rest: 25, illusion: 25, earth: 25, confusion: 25, ice: 25, seal: 25 } },
         { name: 'スーパーガードSP', stats: {}, res: { drain: 25, fire: 25, poison: 25, illusion: 25, lightning: 25, paralyze: 25, light: 25, weak: 25 } },
         { name: 'ミラクルガードSP', stats: {}, res: { drain: 25, poison: 25, dark: 25, death: 25, blast: 25, illusion: 25, wind: 25, sleep: 25 } }
@@ -2511,7 +2581,7 @@
       poison: '毒', death: '即死'
     };
 
-    function formatBonuses(stats, res) {
+    function formatBonuses(stats, res, traits) {
       const parts = [];
       if (stats) {
         Object.entries(stats).forEach(([k, v]) => {
@@ -2521,6 +2591,11 @@
       if (res) {
         Object.entries(res).forEach(([k, v]) => {
           if (v) parts.push(`<span class="item-res-badge">${resLabels[k] || k}+${v}</span>`);
+        });
+      }
+      if (traits) {
+        traits.forEach(t => {
+          parts.push(`<span class="trait-chip" style="font-size:0.7rem; padding:1px 5px; border-color:var(--accent-color);">${t}</span>`);
         });
       }
       return parts.join(' ');
@@ -2573,7 +2648,7 @@
           btn.style.borderColor = 'var(--accent-hover)';
           btn.style.background = 'rgba(37, 99, 235, 0.2)';
         }
-        const bonusHtml = formatBonuses(item.stats, item.res);
+        const bonusHtml = formatBonuses(item.stats, item.res, item.traits);
         btn.innerHTML = `<div class="item-card-title">${item.name}</div>${bonusHtml ? `<div class="item-card-desc">${bonusHtml}</div>` : ''}`;
         btn.onclick = () => selectSkill(item.name);
         container.appendChild(btn);
@@ -2589,6 +2664,7 @@
       }
       closeSkillModal();
       calculate();
+      updateMonsterTraitsDisplay();
       saveToLocalStorage();
     }
 
@@ -2652,6 +2728,7 @@
       }
       closeAccessoryModal();
       calculate();
+      updateMonsterTraitsDisplay();
       saveToLocalStorage();
     }
 
