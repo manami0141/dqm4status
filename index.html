@@ -295,6 +295,53 @@
       align-items: center;
     }
 
+    .monster-traits-row {
+      margin-bottom: 5px;
+      background: var(--card-inner);
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .traits-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 0.72rem;
+      color: var(--text-sub);
+    }
+
+    .traits-chips-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .trait-chip {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      color: var(--text-color);
+      line-height: 1.2;
+    }
+
+    .trait-chip.l-trait {
+      border-color: rgba(245, 158, 11, 0.45);
+      background: rgba(245, 158, 11, 0.08);
+      color: #f59e0b;
+    }
+
+    .trait-chip-tag {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      margin-right: 3px;
+    }
+
     .cell-personality {
       flex: 1;
       width: 100%;
@@ -1046,7 +1093,6 @@
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 10px 12px;
       width: 95%;
       max-width: 480px;
       max-height: 88vh;
@@ -1060,8 +1106,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
-      padding-bottom: 6px;
+      padding-left: 12px;
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -1075,19 +1120,21 @@
       background: none;
       border: none;
       color: var(--text-sub);
-      font-size: 1.4rem;
+      font-size: 2rem;
       cursor: pointer;
       line-height: 1;
-      padding: 0 4px;
+      padding: 2px 16px;
     }
 
     .modal-close:hover {
-      color: var(--red-text);
+      color: var(--white-text);
+      background-color: var(--red-text);
     }
 
     .modal-body {
       overflow-y: auto;
       flex: 1;
+      padding: 4px 4px 4px 12px;
       min-height: 0;
     }
 
@@ -1136,6 +1183,12 @@
       display: flex;
       gap: 4px;
       margin-bottom: 8px;
+      position: sticky;
+      top: 0;
+      background: var(--card-bg);
+      z-index: 10;
+      padding-top: 2px;
+      padding-bottom: 6px;
     }
 
     .skill-tab-btn {
@@ -1229,9 +1282,9 @@
         <div class="monster-top-row">
           <div class="monster-select-cell">
             <label for="monster-select">種族名</label>
-            <select id="monster-select">
-              <option value="">-- 種族を選択して基準値を一括入力 --</option>
-            </select>
+            <input type="hidden" id="monster-select" value="">
+            <button type="button" id="monster-select-btn" class="modal-select-btn" onclick="openMonsterModal()">-- 種族を選択
+              --</button>
           </div>
           <div class="plus-cell">
             <label for="plus">＋</label>
@@ -1280,6 +1333,8 @@
           </div>
         </div>
 
+
+
         <!-- 下段: スキルスロット 3段スタック (全文字がしっかり読める高視認性レイアウト) -->
         <div class="skills-stack">
           <div class="skill-row">
@@ -1307,6 +1362,13 @@
           <div class="accessory-row">
             <span class="accessory-tag">アクセ</span>
             <button type="button" class="accessory-btn" id="accessory-btn" onclick="openAccessoryModal()">未設定</button>
+          </div>
+        </div>
+
+        <!-- 特性表示欄 (種族選択時に自動表示) -->
+        <div class="monster-traits-row" id="monster-traits-box" style="display: none; margin-bottom: 8px; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div class="traits-chips-wrapper" id="traits-chips-container" style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+            <!-- JSで動的生成 -->
           </div>
         </div>
 
@@ -1396,7 +1458,7 @@
               <option value="beast">魔獣</option>
               <option value="demon">悪魔</option>
               <option value="zombie">ゾンビ</option>
-              <option value="material">物质</option>
+              <option value="material">物質</option>
               <option value="legend">???</option>
             </select>
           </div>
@@ -1724,6 +1786,58 @@
     </div>
   </div>
 
+  <!-- モーダル: モンスター選択・検索 -->
+  <div id="monster-modal" class="modal">
+    <div class="modal-overlay" onclick="closeMonsterModal()"></div>
+    <div class="modal-content" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>モンスター検索・選択</h3>
+        <button class="modal-close" onclick="closeMonsterModal()" title="閉じる">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 75vh;">
+        <!-- 検索・フィルターコントロール -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <input type="text" id="monster-search-input" placeholder="種族名で絞込み"
+              style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
+              oninput="filterMonsterList()">
+            <select id="monster-sort-select"
+              style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
+              onchange="filterMonsterList()">
+              <option value="name">五十音順</option>
+              <option value="hp-desc">HPが高い順</option>
+              <option value="mp-desc">MPが高い順</option>
+              <option value="atk-desc">攻撃力が高い順</option>
+              <option value="def-desc">守備力が高い順</option>
+              <option value="spd-desc">素早さが高い順</option>
+              <option value="wis-desc">賢さが高い順</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;">
+            <select id="monster-trait-select" style="width: 100%; padding: 6px 8px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;" onchange="filterMonsterList()">
+              <option value="">-- 特性で絞り込み --</option>
+            </select>
+            <div class="size-toggle-box" style="height: 30px; width: 100px;">
+              <label class="size-option">
+                <input type="radio" name="include-l-trait" value="include" checked onchange="filterMonsterList()"> L有
+              </label>
+              <label class="size-option">
+                <input type="radio" name="include-l-trait" value="exclude" onchange="filterMonsterList()"> L無
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- モンスター一覧グリッド -->
+        <div id="monster-modal-list"
+          style="overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; padding: 4px;">
+          <!-- JSで動的描画 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     /**
      * DQM4 ステータス計算スクリプト (Vanilla JavaScript)
@@ -1795,165 +1909,165 @@
       { id: 'wis', name: '賢さ' },
     ];
 
-    // 種族別ステータス基準値 & S/L別行動回数データ (全157種族)
+    // 種族別ステータス基準値 & S/L別行動回数・特性データ (全157種族)
     const monsterData = {
-      'アイアンタートル': { hp: 1380, mp: 560, atk: 430, def: 800, spd: 300, wis: 660, sAction: '1', lAction: '1-2', res: { fire: 50, water: 0, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 0, light: 0, dark: 25, weak: -25, illusion: 50, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 25 } },
-      'あおバチ騎兵': { hp: 1390, mp: 360, atk: 550, def: 510, spd: 530, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 25, light: 0, dark: 0, weak: 0, illusion: 0, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'アカリリス': { hp: 1370, mp: 380, atk: 530, def: 390, spd: 590, wis: 510, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 50, earth: 25, blast: 0, ice: 25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 0, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'アクアスライム': { hp: 1390, mp: 410, atk: 460, def: 460, spd: 570, wis: 510, sAction: '1', lAction: '2', res: { fire: 0, water: 100, wind: 25, earth: 0, blast: 0, ice: 0, lightning: 0, light: 50, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
-      'あくまのツボ': { hp: 1350, mp: 470, atk: 500, def: 590, spd: 480, wis: 580, sAction: '1', lAction: '2', res: { fire: 0, water: -25, wind: -25, earth: 50, blast: 0, ice: 25, lightning: 75, light: 0, dark: 50, weak: 0, illusion: 0, seal: -25, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 50 } },
-      'アニマルゾンビ': { hp: 1400, mp: 500, atk: 620, def: 400, spd: 480, wis: 300, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 25 } },
-      'あばれうしどり': { hp: 1330, mp: 390, atk: 620, def: 550, spd: 510, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'あばれこまいぬ': { hp: 1370, mp: 400, atk: 570, def: 470, spd: 480, wis: 550, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 0, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'アントベア': { hp: 1390, mp: 450, atk: 610, def: 380, spd: 470, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 50, blast: 25, ice: -25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 50, death: 0 } },
-      'イエティ': { hp: 1360, mp: 290, atk: 600, def: 570, spd: 540, wis: 420, sAction: '1', lAction: '2', res: { fire: -25, water: 25, wind: 50, earth: 0, blast: 0, ice: 100, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'いたずらもぐら': { hp: 1330, mp: 360, atk: 630, def: 580, spd: 540, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: 75, blast: 0, ice: -25, lightning: 0, light: -25, dark: 50, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 50, rest: 50, poison: 0, death: 0 } },
-      'いっかくうさぎ': { hp: 1300, mp: 380, atk: 570, def: 470, spd: 670, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 75, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 25, paralyze: 0, rest: 50, poison: 25, death: 0 } },
-      'いっかく竜': { hp: 1410, mp: 290, atk: 640, def: 540, spd: 480, wis: 290, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 50, light: 0, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 50, poison: -25, death: 0 } },
-      'いばらドラゴン': { hp: 1370, mp: 360, atk: 570, def: 610, spd: 530, wis: 350, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 25, blast: 50, ice: 0, lightning: 0, light: 50, dark: 0, weak: -25, illusion: 50, seal: 25, drain: 50, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
-      'インプ': { hp: 1350, mp: 460, atk: 470, def: 410, spd: 600, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 25, ice: 0, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: 0, rest: 0, poison: 0, death: 0 } },
-      'ウィングスネーク': { hp: 1360, mp: 310, atk: 540, def: 360, spd: 680, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: -25, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'おおがらす': { hp: 1310, mp: 420, atk: 560, def: 590, spd: 570, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 0, lightning: 0, light: -25, dark: 50, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
-      'おおきづち': { hp: 1450, mp: 300, atk: 630, def: 570, spd: 390, wis: 290, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 25, rest: 50, poison: 0, death: 0 } },
-      'オーク': { hp: 1350, mp: 380, atk: 570, def: 500, spd: 510, wis: 560, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'おおさそり': { hp: 1350, mp: 340, atk: 630, def: 650, spd: 480, wis: 390, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 25, earth: 50, blast: 50, ice: -25, lightning: 25, light: -25, dark: 25, weak: 0, illusion: 0, seal: -25, drain: 25, confusion: 0, sleep: 25, paralyze: 75, rest: -25, poison: 75, death: 0 } },
-      'おおにわとり': { hp: 1280, mp: 360, atk: 540, def: 460, spd: 690, wis: 600, sAction: '1', lAction: '2-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 25, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
-      'おおねずみ': { hp: 1360, mp: 350, atk: 580, def: 490, spd: 560, wis: 440, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
-      'おおめだま': { hp: 1350, mp: 440, atk: 560, def: 520, spd: 520, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 0, death: 25 } },
-      'オクトリーチ': { hp: 1410, mp: 420, atk: 600, def: 410, spd: 450, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 100, wind: 0, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
-      'オニオーン': { hp: 1400, mp: 620, atk: 490, def: 460, spd: 340, wis: 660, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 25, light: 50, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'おばけキノコ': { hp: 1350, mp: 430, atk: 580, def: 590, spd: 500, wis: 420, sAction: '1', lAction: '2-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: -25, paralyze: 25, rest: 25, poison: 50, death: 25 } },
-      'おばけキャンドル': { hp: 1390, mp: 400, atk: 480, def: 610, spd: 490, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: -25, earth: 50, blast: 25, ice: 25, lightning: 50, light: 0, dark: 0, weak: 25, illusion: -25, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 0, rest: 0, poison: 50, death: 50 } },
-      'おばけヒトデ': { hp: 1420, mp: 330, atk: 430, def: 520, spd: 510, wis: 390, sAction: '1', lAction: '1-3', res: { fire: -25, water: 75, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'がいこつ': { hp: 1420, mp: 290, atk: 610, def: 510, spd: 430, wis: 440, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 75, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: -25, paralyze: 50, rest: 0, poison: 50, death: 25 } },
-      'ガップリン': { hp: 1390, mp: 410, atk: 540, def: 470, spd: 510, wis: 460, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 100, blast: 0, ice: 0, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 75, death: 0 } },
-      'カバシラー': { hp: 1300, mp: 450, atk: 540, def: 430, spd: 690, wis: 460, sAction: '1', lAction: '2-3', res: { fire: 0, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: 25, light: 25, dark: 0, weak: 25, illusion: 0, seal: 25, drain: 25, confusion: 25, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
-      'かまいたち': { hp: 1320, mp: 570, atk: 590, def: 480, spd: 510, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 50, earth: -25, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 50, death: 0 } },
-      'からくりエッグ': { hp: 1380, mp: 400, atk: 570, def: 540, spd: 510, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'ギズモ': { hp: 1360, mp: 430, atk: 570, def: 350, spd: 510, wis: 620, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 50, ice: 50, lightning: 50, light: 0, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'ギャオース': { hp: 1350, mp: 320, atk: 690, def: 620, spd: 440, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: -25, blast: 0, ice: 50, lightning: 0, light: 50, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 50, paralyze: 0, rest: 25, poison: -25, death: 25 } },
-      'キャタピラー': { hp: 1340, mp: 400, atk: 590, def: 570, spd: 500, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'キャットフライ': { hp: 1310, mp: 430, atk: 450, def: 430, spd: 700, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 75, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'キラーコーン': { hp: 1300, mp: 550, atk: 610, def: 380, spd: 610, wis: 430, sAction: '1', lAction: '2-3', res: { fire: 0, water: 75, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 0, light: 0, dark: 50, weak: 50, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
-      'きりかぶおばけ': { hp: 1370, mp: 460, atk: 580, def: 590, spd: 460, wis: 390, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 25, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
-      'くさった死体': { hp: 1420, mp: 360, atk: 620, def: 530, spd: 400, wis: 390, sAction: '1', lAction: '2', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 25, poison: 50, death: 25 } },
-      'くしざしツインズ': { hp: 1370, mp: 440, atk: 570, def: 480, spd: 490, wis: 480, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'くびながイタチ': { hp: 1380, mp: 370, atk: 510, def: 470, spd: 580, wis: 460, sAction: '1', lAction: '2', res: { fire: 25, water: 0, wind: 50, earth: 25, blast: 0, ice: 25, lightning: 0, light: 0, dark: 25, weak: 25, illusion: 25, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 25, rest: 0, poison: 25, death: 0 } },
-      'くみひもこぞう': { hp: 1340, mp: 420, atk: 580, def: 390, spd: 550, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 0, blast: 0, ice: 50, lightning: 50, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'くらやみハーピー': { hp: 1320, mp: 500, atk: 510, def: 390, spd: 610, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 0, dark: 75, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 0, poison: 0, death: 0 } },
-      'グレムリン': { hp: 1370, mp: 650, atk: 450, def: 290, spd: 520, wis: 640, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 25, poison: 0, death: 0 } },
-      'クロコマーチ': { hp: 1400, mp: 610, atk: 600, def: 280, spd: 460, wis: 390, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'ぐんたいガニ': { hp: 1340, mp: 320, atk: 570, def: 720, spd: 520, wis: 420, sAction: '1', lAction: '1-2', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
-      'ゴースト': { hp: 1350, mp: 640, atk: 480, def: 270, spd: 570, wis: 590, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
-      'ゴールドマン': { hp: 1400, mp: 420, atk: 520, def: 580, spd: 380, wis: 600, sAction: '1', lAction: '2', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 0, ice: 0, lightning: 50, light: 50, dark: 0, weak: 50, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'コドラ': { hp: 1360, mp: 320, atk: 640, def: 490, spd: 590, wis: 290, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 25, blast: 50, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 25, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: -25, death: 25 } },
-      'サボテンボール': { hp: 1400, mp: 330, atk: 570, def: 520, spd: 490, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'さまようよろい': { hp: 1340, mp: 370, atk: 560, def: 680, spd: 490, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 25, illusion: -25, seal: 25, drain: 25, confusion: -25, sleep: 25, paralyze: 25, rest: 0, poison: 50, death: 25 } },
-      'さんぞくウルフ': { hp: 1320, mp: 360, atk: 550, def: 470, spd: 630, wis: 530, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: 25, earth: 25, blast: 0, ice: 25, lightning: 25, light: 0, dark: 25, weak: 50, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: 0, death: 0 } },
-      'シーメーダ': { hp: 1330, mp: 580, atk: 370, def: 360, spd: 690, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 25, water: 75, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: -25, rest: 0, poison: 25, death: 0 } },
-      'しましまキャット': { hp: 1360, mp: 480, atk: 560, def: 510, spd: 480, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 25, death: 25 } },
-      'シャドー': { hp: 1290, mp: 440, atk: 480, def: 490, spd: 670, wis: 610, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: -25, dark: 100, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
-      'ジャングラー': { hp: 1390, mp: 310, atk: 690, def: 380, spd: 460, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 0, earth: 0, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'ジャンボドラキー': { hp: 1430, mp: 430, atk: 530, def: 560, spd: 310, wis: 610, sAction: '1', lAction: '2-3', res: { fire: 0, water: 25, wind: 25, earth: 50, blast: 0, ice: 0, lightning: 0, light: -25, dark: 75, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 25, sleep: -25, paralyze: 50, rest: -25, poison: 50, death: 25 } },
-      'スカイドラゴン': { hp: 1360, mp: 320, atk: 600, def: 530, spd: 530, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: -25, blast: 50, ice: 0, lightning: 25, light: 25, dark: 0, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'スカルガルー': { hp: 1370, mp: 450, atk: 630, def: 380, spd: 450, wis: 530, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 25 } },
-      'スカルライダー': { hp: 1400, mp: 430, atk: 520, def: 370, spd: 480, wis: 600, sAction: '1-2', lAction: '1-2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 25, dark: 25, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 0, poison: 50, death: 0 } },
-      'スキッパー': { hp: 1340, mp: 380, atk: 560, def: 630, spd: 530, wis: 450, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 50, weak: 25, illusion: -25, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'ズッキーニャ': { hp: 1330, mp: 460, atk: 590, def: 560, spd: 490, wis: 500, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 50, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
-      'スノーム': { hp: 1390, mp: 480, atk: 510, def: 580, spd: 390, wis: 580, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: -25, blast: 50, ice: 100, lightning: 50, light: 0, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 25, poison: 0, death: 0 } },
-      'スマイルリザード': { hp: 1430, mp: 360, atk: 460, def: 350, spd: 630, wis: 390, sAction: '1', lAction: '2', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 25, light: 25, dark: 0, weak: -25, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 50, poison: -25, death: 25 } },
-      'スモーク': { hp: 1290, mp: 450, atk: 540, def: 580, spd: 590, wis: 550, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: -25, earth: 25, blast: 0, ice: 25, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 25, confusion: 0, sleep: 0, paralyze: 25, rest: 0, poison: 25, death: 25 } },
-      'スライム': { hp: 1420, mp: 410, atk: 460, def: 380, spd: 650, wis: 310, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 0, lightning: 75, light: 50, dark: -25, weak: 0, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 0, poison: 25, death: 0 } },
-      'スライムカルゴ': { hp: 1410, mp: 470, atk: 480, def: 820, spd: 240, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 50, lightning: 50, light: 25, dark: -25, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'スライムコロネ': { hp: 1390, mp: 460, atk: 560, def: 420, spd: 440, wis: 560, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 0, earth: -25, blast: 50, ice: 25, lightning: 50, light: 0, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 25, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'スライムつむり': { hp: 1430, mp: 520, atk: 400, def: 840, spd: 300, wis: 520, sAction: '1', lAction: '1-2', res: { fire: 0, water: 25, wind: 0, earth: -25, blast: 50, ice: 50, lightning: 50, light: 25, dark: -25, weak: 0, illusion: 50, seal: 50, drain: -25, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 25, death: 0 } },
-      'スライムツリー': { hp: 1360, mp: 550, atk: 520, def: 320, spd: 490, wis: 670, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: 0, blast: 25, ice: 25, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
-      'スライムナイト': { hp: 1330, mp: 420, atk: 580, def: 590, spd: 480, wis: 550, sAction: '1-2', lAction: '1-2', res: { fire: 25, water: 25, wind: 25, earth: -25, blast: 25, ice: 25, lightning: 50, light: 25, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
-      'スライムベス': { hp: 1490, mp: 400, atk: 510, def: 360, spd: 490, wis: 280, sAction: '1', lAction: '2-3', res: { fire: 50, water: 0, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 25, poison: 0, death: 0 } },
-      'ソルジャーブル': { hp: 1360, mp: 330, atk: 640, def: 530, spd: 510, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
-      'たけやりへい': { hp: 1400, mp: 310, atk: 580, def: 500, spd: 510, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 0, blast: 0, ice: 50, lightning: 50, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'ダッシュラン': { hp: 1340, mp: 340, atk: 620, def: 480, spd: 640, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 0 } },
-      'タマゴロン': { hp: 1410, mp: 410, atk: 480, def: 580, spd: 480, wis: 450, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: 25, earth: 0, blast: 25, ice: 0, lightning: 75, light: 50, dark: -25, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'たまねぎスライム': { hp: 1410, mp: 430, atk: 510, def: 530, spd: 570, wis: 240, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 50, seal: 0, drain: -25, confusion: 50, sleep: 0, paralyze: 50, rest: 25, poison: 0, death: 0 } },
-      'ちゅうまじゅう': { hp: 1420, mp: 320, atk: 580, def: 570, spd: 430, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 25, earth: 50, blast: 25, ice: 25, lightning: 25, light: 0, dark: 0, weak: 25, illusion: 25, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'チンチロむし': { hp: 1300, mp: 440, atk: 500, def: 410, spd: 680, wis: 590, sAction: '1', lAction: '2-3', res: { fire: -25, water: 0, wind: -25, earth: 50, blast: 0, ice: 25, lightning: 50, light: 50, dark: 25, weak: 25, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 0, death: 0 } },
-      'テールイーター': { hp: 1410, mp: 530, atk: 580, def: 360, spd: 410, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 25, earth: 50, blast: -25, ice: 0, lightning: 0, light: 0, dark: 25, weak: -25, illusion: 0, seal: 0, drain: 50, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'デザートデーモン': { hp: 1370, mp: 380, atk: 600, def: 500, spd: 460, wis: 520, sAction: '1', lAction: '1-3', res: { fire: 50, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 25, dark: 0, weak: 50, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 0, poison: 0, death: 0 } },
-      'デビルパイン': { hp: 1370, mp: 330, atk: 580, def: 540, spd: 530, wis: 430, sAction: '1', lAction: '2-3', res: { fire: 25, water: 50, wind: 0, earth: 0, blast: 0, ice: 50, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 25, death: 25 } },
-      'デンデン竜': { hp: 1400, mp: 310, atk: 650, def: 590, spd: 430, wis: 340, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 0, blast: 50, ice: 0, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 0, paralyze: 50, rest: 50, poison: -25, death: 0 } },
-      'とけぼうず': { hp: 1410, mp: 340, atk: 490, def: 540, spd: 480, wis: 540, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 75, ice: 0, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 25 } },
-      'とさかへび': { hp: 1310, mp: 290, atk: 640, def: 460, spd: 640, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 0, earth: -25, blast: 100, ice: 0, lightning: 0, light: 50, dark: 25, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 0, rest: 25, poison: 25, death: 0 } },
-      'とらおとこ': { hp: 1350, mp: 340, atk: 590, def: 620, spd: 480, wis: 500, sAction: '1', lAction: '2-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'ドラキー': { hp: 1260, mp: 490, atk: 480, def: 440, spd: 780, wis: 510, sAction: '1', lAction: '2', res: { fire: 25, water: 25, wind: 50, earth: 25, blast: 0, ice: 0, lightning: -25, light: 0, dark: 50, weak: 25, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 25 } },
-      'ドラゴスライム': { hp: 1380, mp: 460, atk: 540, def: 380, spd: 580, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 0, earth: -25, blast: 50, ice: 0, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'ドラゴンキッズ': { hp: 1450, mp: 470, atk: 530, def: 340, spd: 510, wis: 310, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 0, blast: 50, ice: 0, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 25, seal: 25, drain: 25, confusion: 0, sleep: 0, paralyze: 25, rest: 75, poison: -25, death: 0 } },
-      'ドラムゴート': { hp: 1400, mp: 460, atk: 610, def: 450, spd: 410, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
-      'ドルイド': { hp: 1340, mp: 510, atk: 410, def: 590, spd: 520, wis: 680, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 50, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 0 } },
-      'トルトリーナ': { hp: 1330, mp: 470, atk: 580, def: 430, spd: 630, wis: 360, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: -25, earth: 25, blast: 0, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 25, rest: 0, poison: 50, death: 50 } },
-      'ドロザラー': { hp: 1390, mp: 540, atk: 490, def: 540, spd: 430, wis: 520, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'どろにんぎょう': { hp: 1380, mp: 460, atk: 610, def: 540, spd: 480, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'ドロヌーバ': { hp: 1380, mp: 530, atk: 600, def: 590, spd: 310, wis: 540, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: -25, earth: 50, blast: 0, ice: 50, lightning: 50, light: -25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 25 } },
-      'トロピカルスライム': { hp: 1400, mp: 380, atk: 470, def: 510, spd: 510, wis: 550, sAction: '1', lAction: '2-3', res: { fire: 25, water: 25, wind: 0, earth: 0, blast: 0, ice: 25, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 25, seal: 25, drain: -25, confusion: 0, sleep: 50, paralyze: 50, rest: 0, poison: 25, death: 0 } },
-      'ドロル': { hp: 1350, mp: 420, atk: 540, def: 500, spd: 590, wis: 420, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 25, rest: 0, poison: 50, death: 25 } },
-      'どんぐりベビー': { hp: 1420, mp: 450, atk: 590, def: 560, spd: 360, wis: 410, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 50, blast: -25, ice: 25, lightning: 50, light: 0, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'ナイトウイプス': { hp: 1330, mp: 490, atk: 550, def: 410, spd: 530, wis: 620, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 75, blast: 0, ice: 0, lightning: 50, light: 0, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 25 } },
-      'ナスビナーラ': { hp: 1360, mp: 610, atk: 490, def: 440, spd: 480, wis: 570, sAction: '1', lAction: '2', res: { fire: 0, water: 50, wind: 0, earth: 50, blast: -25, ice: 0, lightning: 25, light: 25, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 50, death: 0 } },
-      'ぬすっとウサギ': { hp: 1340, mp: 350, atk: 610, def: 430, spd: 590, wis: 460, sAction: '1', lAction: '2', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: -25, sleep: 50, paralyze: 25, rest: 50, poison: 0, death: 0 } },
-      'パールスライム': { hp: 1390, mp: 410, atk: 460, def: 610, spd: 470, wis: 560, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 25, earth: -25, blast: 25, ice: 25, lightning: 25, light: 25, dark: 0, weak: 25, illusion: 25, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'はなカワセミ': { hp: 1320, mp: 430, atk: 520, def: 540, spd: 620, wis: 470, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 50, earth: 50, blast: 50, ice: 25, lightning: 0, light: -25, dark: 0, weak: 0, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 25, paralyze: 50, rest: -25, poison: 0, death: 25 } },
-      'はなまきドラゴ': { hp: 1380, mp: 570, atk: 630, def: 370, spd: 450, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'はねスライム': { hp: 1320, mp: 490, atk: 520, def: 360, spd: 640, wis: 550, sAction: '1', lAction: '2', res: { fire: 0, water: 0, wind: 75, earth: -25, blast: 25, ice: 0, lightning: 50, light: 50, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 75, rest: 25, poison: 0, death: 0 } },
-      'バブルスライム': { hp: 1440, mp: 660, atk: 460, def: 500, spd: 410, wis: 340, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: -25, blast: 25, ice: 25, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: -25, paralyze: 50, rest: 0, poison: 75, death: 0 } },
-      'はりつきあくま': { hp: 1360, mp: 470, atk: 460, def: 450, spd: 550, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 0, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 50, paralyze: 0, rest: 0, poison: 0, death: 0 } },
-      'ピクシードラゴン': { hp: 1320, mp: 440, atk: 490, def: 460, spd: 620, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 25, earth: 0, blast: 50, ice: 25, lightning: 25, light: 0, dark: 0, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 25 } },
-      'ピッキー': { hp: 1320, mp: 550, atk: 590, def: 340, spd: 580, wis: 490, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 25, light: -25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'ビッグハット': { hp: 1360, mp: 410, atk: 470, def: 630, spd: 490, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 0, ice: -25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 0, seal: 25, drain: 75, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'ビッグモアイ': { hp: 1400, mp: 410, atk: 560, def: 600, spd: 320, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'びっくりサタン': { hp: 1360, mp: 460, atk: 410, def: 560, spd: 570, wis: 580, sAction: '1', lAction: '1-3', res: { fire: 25, water: 50, wind: 50, earth: 0, blast: 0, ice: 0, lightning: -25, light: 0, dark: 50, weak: 25, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 0 } },
-      'ひとくいサーベル': { hp: 1330, mp: 360, atk: 600, def: 510, spd: 580, wis: 450, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'ひとくいばこ': { hp: 1380, mp: 280, atk: 640, def: 590, spd: 450, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 50, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'ファーラット': { hp: 1420, mp: 570, atk: 470, def: 420, spd: 390, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 25, seal: 0, drain: 50, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 25, death: 0 } },
-      'フーセンドラゴン': { hp: 1420, mp: 320, atk: 590, def: 590, spd: 410, wis: 410, sAction: '1', lAction: '1-2', res: { fire: 50, water: -25, wind: 50, earth: 0, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: 50, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'フェアリードラゴン': { hp: 1320, mp: 450, atk: 460, def: 250, spd: 800, wis: 500, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 25, earth: 25, blast: 50, ice: 0, lightning: 0, light: 25, dark: 0, weak: -25, illusion: 50, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 25, rest: 50, poison: -25, death: 0 } },
-      'フォンデュ': { hp: 1390, mp: 480, atk: 500, def: 400, spd: 490, wis: 580, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 50, blast: 25, ice: 50, lightning: 50, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 50, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'プチアーノン': { hp: 1400, mp: 520, atk: 530, def: 460, spd: 400, wis: 560, sAction: '1', lAction: '1-3', res: { fire: -25, water: 100, wind: 0, earth: 50, blast: -25, ice: 0, lightning: -25, light: 25, dark: 50, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'ぶちスライム': { hp: 1420, mp: 460, atk: 510, def: 450, spd: 510, wis: 370, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: -25, blast: 50, ice: 25, lightning: 50, light: 25, dark: -25, weak: 25, illusion: 50, seal: 25, drain: -25, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'プテラノドン': { hp: 1370, mp: 360, atk: 580, def: 350, spd: 620, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 50, earth: -25, blast: 50, ice: 0, lightning: 25, light: 0, dark: 25, weak: 0, illusion: 50, seal: 25, drain: 0, confusion: 0, sleep: 25, paralyze: 0, rest: 50, poison: -25, death: 25 } },
-      'ふゆうじゅ': { hp: 1440, mp: 430, atk: 580, def: 370, spd: 410, wis: 460, sAction: '1', lAction: '2', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 25, light: 0, dark: 50, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 0, paralyze: 25, rest: 0, poison: 50, death: 25 } },
-      'フロッガー': { hp: 1410, mp: 360, atk: 560, def: 450, spd: 520, wis: 390, sAction: '1', lAction: '2', res: { fire: 25, water: 75, wind: 0, earth: 25, blast: -25, ice: 0, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 0, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'ベビークラウド': { hp: 1370, mp: 320, atk: 580, def: 440, spd: 600, wis: 400, sAction: '1', lAction: '2', res: { fire: 50, water: 25, wind: -25, earth: 50, blast: 0, ice: 0, lightning: 25, light: 0, dark: 25, weak: 25, illusion: 0, seal: 25, drain: 25, confusion: -25, sleep: 50, paralyze: 0, rest: 0, poison: 25, death: 25 } },
-      'ベビーサタン': { hp: 1300, mp: 310, atk: 570, def: 530, spd: 570, wis: 680, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 25, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 50 } },
-      'ベビーパンサー': { hp: 1400, mp: 310, atk: 550, def: 550, spd: 570, wis: 300, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 0, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 0, paralyze: 25, rest: 50, poison: 0, death: 25 } },
-      'ポイズンリザード': { hp: 1380, mp: 430, atk: 610, def: 460, spd: 420, wis: 530, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 0, blast: 50, ice: 25, lightning: 0, light: 25, dark: 25, weak: -25, illusion: 50, seal: 0, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 25, death: 0 } },
-      'ホイップゴースト': { hp: 1420, mp: 490, atk: 440, def: 540, spd: 460, wis: 490, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 50, light: 0, dark: 25, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 50, rest: 0, poison: 50, death: 0 } },
-      'ホイミスライム': { hp: 1320, mp: 620, atk: 330, def: 420, spd: 660, wis: 700, sAction: '1', lAction: '2', res: { fire: 0, water: 25, wind: 0, earth: 0, blast: 25, ice: 0, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 25, seal: 25, drain: 0, confusion: 25, sleep: 0, paralyze: 50, rest: 0, poison: 0, death: 25 } },
-      'ボックススライム': { hp: 1420, mp: 640, atk: 450, def: 610, spd: 280, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: -25, blast: 25, ice: 0, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 50, seal: 25, drain: -25, confusion: 25, sleep: 0, paralyze: 75, rest: 0, poison: 0, death: 0 } },
-      'ポンポコだぬき': { hp: 1350, mp: 350, atk: 580, def: 600, spd: 530, wis: 430, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 25, blast: 25, ice: -25, lightning: 0, light: 25, dark: 0, weak: -25, illusion: 25, seal: 0, drain: 0, confusion: -25, sleep: 50, paralyze: 50, rest: 50, poison: 25, death: 0 } },
-      'マーマン': { hp: 1350, mp: 380, atk: 570, def: 600, spd: 530, wis: 420, sAction: '1', lAction: '2', res: { fire: 0, water: 75, wind: 50, earth: 0, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 25, paralyze: -25, rest: 25, poison: 25, death: 0 } },
-      'マグマスライム': { hp: 1350, mp: 410, atk: 530, def: 460, spd: 540, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 100, water: -25, wind: 0, earth: 25, blast: 0, ice: -25, lightning: 0, light: 100, dark: -25, weak: 0, illusion: 75, seal: 0, drain: -25, confusion: 0, sleep: 25, paralyze: 75, rest: 0, poison: 0, death: 0 } },
-      'マドハンド': { hp: 1420, mp: 550, atk: 560, def: 400, spd: 430, wis: 390, sAction: '1', lAction: '1-3', res: { fire: -25, water: 25, wind: 0, earth: 50, blast: 25, ice: 50, lightning: 25, light: 0, dark: 0, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 0, sleep: 25, paralyze: 25, rest: 25, poison: 50, death: 0 } },
-      'まほうつかい': { hp: 1360, mp: 530, atk: 430, def: 440, spd: 550, wis: 630, sAction: '1', lAction: '1-3', res: { fire: 50, water: 25, wind: 0, earth: 0, blast: 25, ice: 25, lightning: -25, light: 0, dark: 50, weak: 0, illusion: 0, seal: 50, drain: 75, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: -25, death: 25 } },
-      'マンドラ': { hp: 1370, mp: 490, atk: 520, def: 450, spd: 520, wis: 500, sAction: '1', lAction: '1-3', res: { fire: 0, water: 25, wind: 0, earth: 25, blast: 0, ice: 25, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 50, sleep: 0, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'ミイラおとこ': { hp: 1400, mp: 420, atk: 580, def: 580, spd: 450, wis: 340, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 25, earth: 50, blast: 25, ice: 50, lightning: 0, light: 0, dark: 25, weak: 0, illusion: -25, seal: 25, drain: 50, confusion: 0, sleep: 50, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'ミステリドール': { hp: 1340, mp: 500, atk: 500, def: 550, spd: 490, wis: 610, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 0, dark: 25, weak: 0, illusion: 50, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 25, poison: 50, death: 0 } },
-      'むくろカサゴ': { hp: 1430, mp: 440, atk: 570, def: 380, spd: 380, wis: 600, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 0, earth: 0, blast: 0, ice: 25, lightning: 0, light: 0, dark: 75, weak: 25, illusion: 0, seal: 50, drain: 0, confusion: 0, sleep: 25, paralyze: 50, rest: 0, poison: 0, death: 0 } },
-      'メーダ': { hp: 1400, mp: 450, atk: 530, def: 400, spd: 460, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 25, blast: 0, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 0, seal: 25, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 25, death: 0 } },
-      'メソコボルト': { hp: 1360, mp: 390, atk: 520, def: 440, spd: 560, wis: 570, sAction: '1', lAction: '2-3', res: { fire: 25, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: 0, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 0, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'メタッピー': { hp: 1400, mp: 490, atk: 470, def: 730, spd: 440, wis: 360, sAction: '1', lAction: '1-3', res: { fire: 0, water: 0, wind: -25, earth: 25, blast: 25, ice: 50, lightning: 50, light: 25, dark: 0, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
-      'メタルハンター': { hp: 1350, mp: 300, atk: 680, def: 540, spd: 520, wis: 360, sAction: '1-2', lAction: '1-2', res: { fire: 0, water: 0, wind: -25, earth: 0, blast: 50, ice: 50, lightning: 50, light: 25, dark: 0, weak: 25, illusion: 0, seal: 0, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 50, poison: 50, death: 0 } },
-      'メラゴースト': { hp: 1400, mp: 520, atk: 350, def: 580, spd: 480, wis: 640, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 50, blast: 50, ice: -25, lightning: 0, light: 50, dark: 0, weak: 0, illusion: -25, seal: 0, drain: 50, confusion: 25, sleep: 0, paralyze: 25, rest: 25, poison: 50, death: 0 } },
-      'モーモン': { hp: 1300, mp: 550, atk: 410, def: 440, spd: 700, wis: 590, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 25, earth: 0, blast: 50, ice: 25, lightning: -25, light: 0, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 25, confusion: 50, sleep: -25, paralyze: -25, rest: 50, poison: 25, death: 25 } },
-      'もみじこぞう': { hp: 1350, mp: 660, atk: 520, def: 330, spd: 610, wis: 350, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 25, earth: 50, blast: -25, ice: 25, lightning: 0, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 0, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 25, death: 0 } },
-      'ももんじゃ': { hp: 1370, mp: 380, atk: 580, def: 620, spd: 520, wis: 320, sAction: '1', lAction: '1-3', res: { fire: 25, water: 0, wind: 50, earth: 0, blast: 25, ice: 25, lightning: 0, light: 25, dark: 0, weak: 0, illusion: 25, seal: 50, drain: 0, confusion: 0, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 25 } },
-      'やみしばり': { hp: 1340, mp: 440, atk: 550, def: 430, spd: 530, wis: 610, sAction: '1', lAction: '1-3', res: { fire: -25, water: 0, wind: 0, earth: 50, blast: 0, ice: 50, lightning: 0, light: 0, dark: 75, weak: 0, illusion: -25, seal: 75, drain: 50, confusion: 0, sleep: 0, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'ゆめにゅうどう': { hp: 1390, mp: 460, atk: 460, def: 420, spd: 510, wis: 620, sAction: '1', lAction: '1-3', res: { fire: 50, water: 0, wind: 50, earth: 0, blast: 25, ice: -25, lightning: 0, light: 0, dark: 50, weak: -25, illusion: 25, seal: 75, drain: 0, confusion: -25, sleep: 50, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      'ランタンこぞう': { hp: 1370, mp: 460, atk: 520, def: 590, spd: 430, wis: 570, sAction: '1', lAction: '1-3', res: { fire: 25, water: -25, wind: -25, earth: 0, blast: 25, ice: 50, lightning: 50, light: 50, dark: 0, weak: 0, illusion: 0, seal: 50, drain: 0, confusion: 50, sleep: -25, paralyze: 0, rest: 0, poison: 50, death: 25 } },
-      'ランドセーラー': { hp: 1370, mp: 430, atk: 690, def: 410, spd: 460, wis: 380, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 0, blast: 25, ice: 0, lightning: -25, light: -25, dark: 75, weak: 50, illusion: 0, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 0, poison: 0, death: 25 } },
-      'リップス': { hp: 1430, mp: 630, atk: 490, def: 530, spd: 370, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 0, water: 50, wind: 50, earth: 50, blast: -25, ice: 25, lightning: 0, light: 0, dark: 0, weak: -25, illusion: 0, seal: 50, drain: 25, confusion: 25, sleep: 50, paralyze: 50, rest: -25, poison: 0, death: 0 } },
-      'リリパット': { hp: 1460, mp: 470, atk: 480, def: 500, spd: 460, wis: 310, sAction: '1', lAction: '2', res: { fire: 25, water: 25, wind: 25, earth: 25, blast: 25, ice: 0, lightning: -25, light: 25, dark: 25, weak: 0, illusion: 25, seal: 0, drain: 50, confusion: 50, sleep: 0, paralyze: -25, rest: 25, poison: 0, death: 25 } },
-      'わかめ王子': { hp: 1280, mp: 540, atk: 580, def: 520, spd: 510, wis: 640, sAction: '1', lAction: '1-3', res: { fire: -25, water: 50, wind: 0, earth: 25, blast: 0, ice: 25, lightning: 0, light: 25, dark: 50, weak: 0, illusion: -25, seal: 50, drain: 50, confusion: 0, sleep: 25, paralyze: 0, rest: 0, poison: 50, death: 0 } },
-      'ワンワンダック': { hp: 1370, mp: 320, atk: 590, def: 520, spd: 550, wis: 400, sAction: '1', lAction: '1-3', res: { fire: 25, water: 25, wind: 0, earth: 50, blast: 25, ice: 50, lightning: -25, light: 25, dark: -25, weak: 50, illusion: -25, seal: 25, drain: 25, confusion: 25, sleep: 0, paralyze: 0, rest: 50, poison: 0, death: 0 } },
-      '毒つぼドラゴン': { hp: 1380, mp: 340, atk: 690, def: 370, spd: 490, wis: 410, sAction: '1', lAction: '1-3', res: { fire: 50, water: -25, wind: 0, earth: 25, blast: 50, ice: 0, lightning: -25, light: 25, dark: 50, weak: 25, illusion: 50, seal: 0, drain: -25, confusion: 0, sleep: 0, paralyze: 25, rest: 50, poison: 25, death: 0 } },
+      "アイアンタートル": {"hp":1380,"mp":560,"atk":430,"def":800,"spd":300,"wis":660,"sAction":"1","lAction":"1-2","res":{"fire":50,"water":0,"wind":25,"earth":0,"blast":50,"ice":0,"lightning":0,"light":0,"dark":25,"weak":-25,"illusion":50,"seal":0,"drain":50,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":-25,"death":25},"sTraits":["やいばのボディ","ねがえり","ときどきスカラ"],"lTraits":["1〜2回行動","癒やしの大力","会心完全ガード"]},
+      "あおバチ騎兵": {"hp":1390,"mp":360,"atk":550,"def":510,"spd":530,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":25,"earth":50,"blast":0,"ice":0,"lightning":25,"light":0,"dark":0,"weak":0,"illusion":0,"seal":25,"drain":0,"confusion":0,"sleep":25,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["どく攻撃","ときどきスカラ","どくブレイク大"],"lTraits":["1〜3回行動","ピンチで会心","しっぺがえし"]},
+      "アカリリス": {"hp":1370,"mp":380,"atk":530,"def":390,"spd":590,"wis":510,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":50,"earth":25,"blast":0,"ice":25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":0,"confusion":0,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["会心率アップ大","ときどきスカラ","ラブリー"],"lTraits":["1〜3回行動","ミラクル攻撃","背水の陣"]},
+      "アクアスライム": {"hp":1390,"mp":410,"atk":460,"def":460,"spd":570,"wis":510,"sAction":"1","lAction":"2","res":{"fire":0,"water":100,"wind":25,"earth":0,"blast":0,"ice":0,"lightning":0,"light":50,"dark":-25,"weak":0,"illusion":75,"seal":0,"drain":-25,"confusion":0,"sleep":25,"paralyze":75,"rest":0,"poison":0,"death":0},"sTraits":["水のコツ","いきなりピオラ","アンチみかわし"],"lTraits":["2回行動","みかわしアップ大","水ブレイク大"]},
+      "あくまのツボ": {"hp":1350,"mp":470,"atk":500,"def":590,"spd":480,"wis":580,"sAction":"1","lAction":"2","res":{"fire":0,"water":-25,"wind":-25,"earth":50,"blast":0,"ice":25,"lightning":75,"light":0,"dark":50,"weak":0,"illusion":0,"seal":-25,"drain":50,"confusion":-25,"sleep":50,"paralyze":0,"rest":0,"poison":50,"death":50},"sTraits":["ザキ攻撃","いきなりスカラ","みかわしアップ大"],"lTraits":["2回行動","スモールキラー","即死ブレイク大"]},
+      "アニマルゾンビ": {"hp":1400,"mp":500,"atk":620,"def":400,"spd":480,"wis":300,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":50,"drain":50,"confusion":0,"sleep":0,"paralyze":0,"rest":0,"poison":50,"death":25},"sTraits":["きょうせんし","いきなりピオラ","プレッシャー"],"lTraits":["2回行動","くじけぬ心","闇ブレイク大"]},
+      "あばれうしどり": {"hp":1330,"mp":390,"atk":620,"def":550,"spd":510,"wis":480,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":25,"earth":50,"blast":-25,"ice":0,"lightning":0,"light":25,"dark":25,"weak":25,"illusion":0,"seal":0,"drain":0,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["きょうせんし","みかわしアップ大","ときどきバイキルト"],"lTraits":["1〜3回行動","最後のあがき","全体攻撃"]},
+      "あばれこまいぬ": {"hp":1370,"mp":400,"atk":570,"def":470,"spd":480,"wis":550,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":25,"blast":0,"ice":50,"lightning":50,"light":50,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["くじけぬ心","徒手空拳","ピンチで会心"],"lTraits":["1〜3回行動","ときどきスカラ","根に持つタイプ"]},
+      "アントベア": {"hp":1390,"mp":450,"atk":610,"def":380,"spd":470,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":50,"blast":25,"ice":-25,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":0,"confusion":-25,"sleep":50,"paralyze":25,"rest":50,"poison":50,"death":0},"sTraits":["ときどきバイキルト","メタルハンター","ショック攻撃"],"lTraits":["1〜3回行動","きょうせんし","休みブレイク大"]},
+      "イエティ": {"hp":1360,"mp":290,"atk":600,"def":570,"spd":540,"wis":420,"sAction":"1","lAction":"2","res":{"fire":-25,"water":25,"wind":50,"earth":0,"blast":0,"ice":100,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":50,"seal":25,"drain":0,"confusion":0,"sleep":25,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["氷結のコツ","アンチみかわし","ショック攻撃"],"lTraits":["2回行動","ときどきピオラ","氷結ブレイク大"]},
+      "いたずらもぐら": {"hp":1330,"mp":360,"atk":630,"def":580,"spd":540,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":50,"earth":75,"blast":0,"ice":-25,"lightning":0,"light":-25,"dark":50,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":-25,"sleep":50,"paralyze":50,"rest":50,"poison":0,"death":0},"sTraits":["とうそうほんのう","ちからため","メタルキラー"],"lTraits":["1〜3回行動","会心率アップ大","スモールキラー"]},
+      "いっかくうさぎ": {"hp":1300,"mp":380,"atk":570,"def":470,"spd":670,"wis":470,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":75,"earth":25,"blast":0,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":25,"illusion":0,"seal":0,"drain":0,"confusion":25,"sleep":25,"paralyze":0,"rest":50,"poison":25,"death":0},"sTraits":["とうそうほんのう","やいばのボディ","秘めたるチカラ"],"lTraits":["1〜3回行動","みかわしアップ大","ラストスタンド"]},
+      "いっかく竜": {"hp":1410,"mp":290,"atk":640,"def":540,"spd":480,"wis":290,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":25,"earth":0,"blast":50,"ice":0,"lightning":50,"light":0,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":50,"rest":50,"poison":-25,"death":0},"sTraits":["ショック攻撃","きょうせんし","ピンチで会心"],"lTraits":["1〜3回行動","休みブレイク大","やいばのボディ"]},
+      "いばらドラゴン": {"hp":1370,"mp":360,"atk":570,"def":610,"spd":530,"wis":350,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":25,"blast":50,"ice":0,"lightning":0,"light":50,"dark":0,"weak":-25,"illusion":50,"seal":25,"drain":50,"confusion":0,"sleep":25,"paralyze":0,"rest":50,"poison":-25,"death":0},"sTraits":["やいばのボディ","ねむり攻撃","いやがらせ"],"lTraits":["1〜3回行動","超魔獣キラー","マヒブレイク大"]},
+      "インプ": {"hp":1350,"mp":460,"atk":470,"def":410,"spd":600,"wis":590,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":25,"blast":25,"ice":0,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":50,"paralyze":0,"rest":0,"poison":0,"death":0},"sTraits":["いやがらせ","ツッコミ","わるあがき"],"lTraits":["1〜3回行動","マジシャンズハイ","地ブレイク大"]},
+      "ウィングスネーク": {"hp":1360,"mp":310,"atk":540,"def":360,"spd":680,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":25,"earth":-25,"blast":50,"ice":0,"lightning":50,"light":25,"dark":0,"weak":50,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["どく攻撃","アンチみかわし","くじけぬ心"],"lTraits":["1〜3回行動","どくブレイク大","ときどきバイキルト"]},
+      "おおがらす": {"hp":1310,"mp":420,"atk":560,"def":590,"spd":570,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":50,"blast":-25,"ice":0,"lightning":0,"light":-25,"dark":50,"weak":0,"illusion":0,"seal":25,"drain":25,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":0,"death":0},"sTraits":["みかわしアップ大","いきなりピオラ","しっぺがえし"],"lTraits":["1〜3回行動","闇のコツ","いやがらせ"]},
+      "おおきづち": {"hp":1450,"mp":300,"atk":630,"def":570,"spd":390,"wis":290,"sAction":"1","lAction":"2","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":0,"confusion":0,"sleep":25,"paralyze":25,"rest":50,"poison":0,"death":0},"sTraits":["会心率アップ大","メタルハンター","いきなりバイキルト"],"lTraits":["2回行動","くじけぬ心","アンチみかわし"]},
+      "オーク": {"hp":1350,"mp":380,"atk":570,"def":500,"spd":510,"wis":560,"sAction":"1","lAction":"2","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":0,"sleep":25,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["回復のコツ","アンチみかわし","ピンチで会心"],"lTraits":["2回行動","いきなりピオラ","ときどきバイキルト"]},
+      "おおさそり": {"hp":1350,"mp":340,"atk":630,"def":650,"spd":480,"wis":390,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":25,"earth":50,"blast":50,"ice":-25,"lightning":25,"light":-25,"dark":25,"weak":0,"illusion":0,"seal":-25,"drain":25,"confusion":0,"sleep":25,"paralyze":75,"rest":-25,"poison":75,"death":0},"sTraits":["会心率アップ大","マヒ攻撃","いやがらせ"],"lTraits":["1〜3回行動","背水の陣","マヒブレイク大"]},
+      "おおにわとり": {"hp":1280,"mp":360,"atk":540,"def":460,"spd":690,"wis":600,"sAction":"1","lAction":"2-3","res":{"fire":-25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":0,"lightning":25,"light":50,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":0,"death":0},"sTraits":["ロケットスタート","ねむり攻撃","ツッコミ"],"lTraits":["2〜3回行動","スモールキラー","ねむりブレイク大"]},
+      "おおねずみ": {"hp":1360,"mp":350,"atk":580,"def":490,"spd":560,"wis":440,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":25,"wind":50,"earth":0,"blast":25,"ice":-25,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":0,"seal":25,"drain":25,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":25,"death":0},"sTraits":["きょうせんし","ときどきバイキルト","とうそうほんのう"],"lTraits":["1〜3回行動","超自然キラー","全体攻撃"]},
+      "おおめだま": {"hp":1350,"mp":440,"atk":560,"def":520,"spd":520,"wis":480,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":50,"wind":50,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":25,"weak":0,"illusion":0,"seal":50,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":0,"poison":0,"death":25},"sTraits":["ピンチで会心","こんらん攻撃","いきなりバイキルト"],"lTraits":["1〜3回行動","封じブレイク大","ギャンブルボディ"]},
+      "オクトリーチ": {"hp":1410,"mp":420,"atk":600,"def":410,"spd":450,"wis":430,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":100,"wind":0,"earth":50,"blast":-25,"ice":25,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":0,"death":0},"sTraits":["マヒ攻撃","水のコツ","ロケットスタート"],"lTraits":["1〜3回行動","きょうせんし","全体攻撃"]},
+      "オニオーン": {"hp":1400,"mp":620,"atk":490,"def":460,"spd":340,"wis":660,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":0,"earth":50,"blast":-25,"ice":0,"lightning":25,"light":50,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["れんぞく×6","ラージキラー","かいひほんのう"],"lTraits":["1〜3回行動","みかわしアップ超","やまびこ"]},
+      "おばけキノコ": {"hp":1350,"mp":430,"atk":580,"def":590,"spd":500,"wis":420,"sAction":"1","lAction":"2-3","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":0,"dark":50,"weak":25,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":-25,"paralyze":25,"rest":25,"poison":50,"death":25},"sTraits":["どくブレイク大","おいうち","スヤスヤボディ"],"lTraits":["2〜3回行動","いやがらせ","ねむりブレイク大"]},
+      "おばけキャンドル": {"hp":1390,"mp":400,"atk":480,"def":610,"spd":490,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":-25,"earth":50,"blast":25,"ice":25,"lightning":50,"light":0,"dark":0,"weak":25,"illusion":-25,"seal":0,"drain":25,"confusion":0,"sleep":25,"paralyze":0,"rest":0,"poison":50,"death":50},"sTraits":["火のコツ","きょうせんし","くじけぬ心"],"lTraits":["1〜3回行動","弱体化ブレイク大","最後のあがき"]},
+      "おばけヒトデ": {"hp":1420,"mp":330,"atk":430,"def":520,"spd":510,"wis":390,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":75,"wind":-25,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":25,"sleep":25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["どくどくボディ","しっぺがえし","ロケットスタート"],"lTraits":["1〜3回行動","超自然キラー","どく攻撃"]},
+      "がいこつ": {"hp":1420,"mp":290,"atk":610,"def":510,"spd":430,"wis":440,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":75,"weak":25,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":-25,"paralyze":50,"rest":0,"poison":50,"death":25},"sTraits":["こんらんブレイク大","ピンチで会心","メタルハンター"],"lTraits":["2回行動","最後のあがき","電撃ブレイク大"]},
+      "ガップリン": {"hp":1390,"mp":410,"atk":540,"def":470,"spd":510,"wis":460,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":25,"wind":0,"earth":100,"blast":0,"ice":0,"lightning":0,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":50,"drain":0,"confusion":0,"sleep":0,"paralyze":0,"rest":50,"poison":75,"death":0},"sTraits":["ピンチで会心","しっぺがえし","いきなりピオラ"],"lTraits":["1〜3回行動","ツッコミ","ねむりブレイク大"]},
+      "カバシラー": {"hp":1300,"mp":450,"atk":540,"def":430,"spd":690,"wis":460,"sAction":"1","lAction":"2-3","res":{"fire":0,"water":25,"wind":25,"earth":25,"blast":25,"ice":0,"lightning":25,"light":25,"dark":0,"weak":25,"illusion":0,"seal":25,"drain":25,"confusion":25,"sleep":25,"paralyze":0,"rest":50,"poison":-25,"death":0},"sTraits":["れんぞく×6","みかわしアップ大","どくブレイク大"],"lTraits":["2〜3回行動","ぐるぐるボディ","パワードレイン"]},
+      "かまいたち": {"hp":1320,"mp":570,"atk":590,"def":480,"spd":510,"wis":470,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":50,"earth":-25,"blast":0,"ice":50,"lightning":25,"light":25,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":50,"sleep":-25,"paralyze":25,"rest":0,"poison":50,"death":0},"sTraits":["風のコツ","いきなりピオラ","弱体化ブレイク大"],"lTraits":["1〜3回行動","わるあがき","全体攻撃"]},
+      "からくりエッグ": {"hp":1380,"mp":400,"atk":570,"def":540,"spd":510,"wis":380,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":25,"blast":25,"ice":50,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["ギャンブルボディ","ねがえり","アンチみかわし"],"lTraits":["1〜3回行動","ときどきスカラ","ピンチで会心"]},
+      "ギズモ": {"hp":1360,"mp":430,"atk":570,"def":350,"spd":510,"wis":620,"sAction":"1","lAction":"2","res":{"fire":0,"water":0,"wind":-25,"earth":25,"blast":50,"ice":50,"lightning":50,"light":0,"dark":0,"weak":25,"illusion":0,"seal":0,"drain":25,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["みかわしアップ大","最後の息吹","風のコツ"],"lTraits":["2回行動","たいでんたいしつ","魔力の強風"]},
+      "ギャオース": {"hp":1350,"mp":320,"atk":690,"def":620,"spd":440,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":0,"earth":-25,"blast":0,"ice":50,"lightning":0,"light":50,"dark":25,"weak":0,"illusion":50,"seal":25,"drain":0,"confusion":0,"sleep":50,"paralyze":0,"rest":25,"poison":-25,"death":25},"sTraits":["みかわしアップ大","水のコツ","いきなりバイキルト"],"lTraits":["1〜3回行動","ファイターズハイ","氷結ブレイク大"]},
+      "キャタピラー": {"hp":1340,"mp":400,"atk":590,"def":570,"spd":500,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":0,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":0,"seal":50,"drain":0,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["いきなりスカラ","ピンチで会心","どく攻撃"],"lTraits":["1〜3回行動","どくブレイク大","会心完全ガード"]},
+      "キャットフライ": {"hp":1310,"mp":430,"atk":450,"def":430,"spd":700,"wis":600,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":0,"seal":75,"drain":0,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["封じブレイク大","みかわしアップ大","ときどきピオラ"],"lTraits":["1〜3回行動","魔力の強風","魔力暴走率アップ大"]},
+      "キラーコーン": {"hp":1300,"mp":550,"atk":610,"def":380,"spd":610,"wis":430,"sAction":"1","lAction":"2-3","res":{"fire":0,"water":75,"wind":0,"earth":50,"blast":-25,"ice":0,"lightning":0,"light":0,"dark":50,"weak":50,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":0,"death":0},"sTraits":["マヒブレイク大","癒やしの力","おだてじょうず"],"lTraits":["2〜3回行動","背水の陣","最後のあがき"]},
+      "きりかぶおばけ": {"hp":1370,"mp":460,"atk":580,"def":590,"spd":460,"wis":390,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":25,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":25,"paralyze":25,"rest":25,"poison":50,"death":0},"sTraits":["れんぞく×2","セラピー","マホトラ攻撃"],"lTraits":["2回行動","いやがらせ","ねむりブレイク大"]},
+      "くさった死体": {"hp":1420,"mp":360,"atk":620,"def":530,"spd":400,"wis":390,"sAction":"1","lAction":"2","res":{"fire":-25,"water":25,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":0,"paralyze":25,"rest":25,"poison":50,"death":25},"sTraits":["どく攻撃","休みブレイク大","封じブレイク大"],"lTraits":["2回行動","どくどくボディ","ラストスタンド"]},
+      "くしざしツインズ": {"hp":1370,"mp":440,"atk":570,"def":480,"spd":490,"wis":480,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":50,"blast":-25,"ice":25,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["封じブレイク大","やいばのボディ","ラージキラー"],"lTraits":["1〜3回行動","くじけぬ心","いきなりバイキルト"]},
+      "くびながイタチ": {"hp":1380,"mp":370,"atk":510,"def":470,"spd":580,"wis":460,"sAction":"1","lAction":"2","res":{"fire":25,"water":0,"wind":50,"earth":25,"blast":0,"ice":25,"lightning":0,"light":0,"dark":25,"weak":25,"illusion":25,"seal":0,"drain":25,"confusion":0,"sleep":25,"paralyze":25,"rest":0,"poison":25,"death":0},"sTraits":["ねむりブレイク大","ショック攻撃","ラブリー"],"lTraits":["2回行動","ヘロヘロボディ","最後のあがき"]},
+      "くみひもこぞう": {"hp":1340,"mp":420,"atk":580,"def":390,"spd":550,"wis":570,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":-25,"earth":0,"blast":0,"ice":50,"lightning":50,"light":25,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["セラピー","マヒ攻撃","みかわしアップ大"],"lTraits":["1〜3回行動","マヒブレイク大","全体攻撃"]},
+      "くらやみハーピー": {"hp":1320,"mp":500,"atk":510,"def":390,"spd":610,"wis":590,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":0,"blast":0,"ice":0,"lightning":-25,"light":0,"dark":75,"weak":0,"illusion":0,"seal":50,"drain":50,"confusion":50,"sleep":25,"paralyze":-25,"rest":0,"poison":0,"death":0},"sTraits":["闇のコツ","みかわしアップ大","スヤスヤボディ"],"lTraits":["1〜3回行動","ときどきピオラ","MP吸収ブレイク大"]},
+      "グレムリン": {"hp":1370,"mp":650,"atk":450,"def":290,"spd":520,"wis":640,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":50,"weak":0,"illusion":0,"seal":25,"drain":50,"confusion":50,"sleep":25,"paralyze":-25,"rest":25,"poison":0,"death":0},"sTraits":["魔力暴走率アップ大","みかわしアップ大","いやがらせ"],"lTraits":["1〜3回行動","おいうち","くじけぬ心"]},
+      "クロコマーチ": {"hp":1400,"mp":610,"atk":600,"def":280,"spd":460,"wis":390,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":25,"wind":0,"earth":0,"blast":25,"ice":0,"lightning":0,"light":25,"dark":25,"weak":50,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["メタルキラー","おだてじょうず","ときどきピオラ"],"lTraits":["1〜3回行動","医術士","秘めたるチカラ"]},
+      "ぐんたいガニ": {"hp":1340,"mp":320,"atk":570,"def":720,"spd":520,"wis":420,"sAction":"1","lAction":"1-2","res":{"fire":-25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":50,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":50,"death":0},"sTraits":["れんぞく×2","いきなりスカラ","弱体化ブレイク大"],"lTraits":["1〜2回行動","会心完全ガード","最後のあがき"]},
+      "ゴースト": {"hp":1350,"mp":640,"atk":480,"def":270,"spd":570,"wis":590,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":25,"paralyze":25,"rest":25,"poison":50,"death":0},"sTraits":["封じブレイク大","ショック攻撃","マホキテボディ"],"lTraits":["2回行動","みかわしアップ超","魔力の強風"]},
+      "ゴールドマン": {"hp":1400,"mp":420,"atk":520,"def":580,"spd":380,"wis":600,"sAction":"1","lAction":"2","res":{"fire":0,"water":50,"wind":0,"earth":0,"blast":0,"ice":0,"lightning":50,"light":50,"dark":0,"weak":50,"illusion":0,"seal":0,"drain":0,"confusion":50,"sleep":0,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["キラキラボディ","ちからため","いきなりマホカンタ"],"lTraits":["2回行動","プレッシャー","弱体化ブレイク大"]},
+      "コドラ": {"hp":1360,"mp":320,"atk":640,"def":490,"spd":590,"wis":290,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":25,"earth":25,"blast":50,"ice":0,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":50,"seal":25,"drain":25,"confusion":0,"sleep":0,"paralyze":0,"rest":50,"poison":-25,"death":25},"sTraits":["会心率アップ大","ロケットスタート","くじけぬ心"],"lTraits":["1〜3回行動","幻惑ブレイク大","火ブレイク大"]},
+      "サボテンボール": {"hp":1400,"mp":330,"atk":570,"def":520,"spd":490,"wis":430,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":25,"earth":50,"blast":0,"ice":0,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["やいばのボディ","休みブレイク大","ラージキラー"],"lTraits":["1〜3回行動","わるあがき","全体攻撃"]},
+      "さまようよろい": {"hp":1340,"mp":370,"atk":560,"def":680,"spd":490,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":25,"dark":25,"weak":25,"illusion":-25,"seal":25,"drain":25,"confusion":-25,"sleep":25,"paralyze":25,"rest":0,"poison":50,"death":25},"sTraits":["ミラクル攻撃","ぼうえいほんのう","わるあがき"],"lTraits":["1〜3回行動","たいでんたいしつ","全ガードブレイク"]},
+      "さんぞくウルフ": {"hp":1320,"mp":360,"atk":550,"def":470,"spd":630,"wis":530,"sAction":"1","lAction":"2","res":{"fire":0,"water":25,"wind":25,"earth":25,"blast":0,"ice":25,"lightning":25,"light":0,"dark":25,"weak":50,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":0,"death":0},"sTraits":["ときどきピオラ","どく攻撃","どくブレイク大"],"lTraits":["2回行動","スモールキラー","会心率アップ超"]},
+      "シーメーダ": {"hp":1330,"mp":580,"atk":370,"def":360,"spd":690,"wis":620,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":75,"wind":50,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":50,"paralyze":-25,"rest":0,"poison":25,"death":0},"sTraits":["みかわしアップ大","癒やしの力","水ブレイク大"],"lTraits":["1〜3回行動","ふっかつの祈り","ひかりのはどう"]},
+      "しましまキャット": {"hp":1360,"mp":480,"atk":560,"def":510,"spd":480,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":0,"ice":-25,"lightning":0,"light":25,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":0,"confusion":-25,"sleep":50,"paralyze":25,"rest":50,"poison":25,"death":25},"sTraits":["ときどきスカラ","ねがえり","秘めたるチカラ"],"lTraits":["1〜3回行動","てんしのきまぐれ","いきなりマホカンタ"]},
+      "シャドー": {"hp":1290,"mp":440,"atk":480,"def":490,"spd":670,"wis":610,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":0,"light":-25,"dark":100,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":25,"paralyze":25,"rest":25,"poison":50,"death":0},"sTraits":["闇のコツ","いきなりインテ","ザキ攻撃"],"lTraits":["1〜3回行動","即死ブレイク大","ギャンブルボディ"]},
+      "ジャングラー": {"hp":1390,"mp":310,"atk":690,"def":380,"spd":460,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":0,"earth":0,"blast":50,"ice":0,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":25,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["ときどきバイキルト","ときどきピオラ","どく攻撃"],"lTraits":["1〜3回行動","背水の陣","ファイターズハイ"]},
+      "ジャンボドラキー": {"hp":1430,"mp":430,"atk":530,"def":560,"spd":310,"wis":610,"sAction":"1","lAction":"2-3","res":{"fire":0,"water":25,"wind":25,"earth":50,"blast":0,"ice":0,"lightning":0,"light":-25,"dark":75,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":25,"sleep":-25,"paralyze":50,"rest":-25,"poison":50,"death":25},"sTraits":["封じブレイク大","ねがえり","闇のコツ"],"lTraits":["2〜3回行動","魔力暴走率アップ超","魔力の強風"]},
+      "スカイドラゴン": {"hp":1360,"mp":320,"atk":600,"def":530,"spd":530,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":50,"earth":-25,"blast":50,"ice":0,"lightning":25,"light":25,"dark":0,"weak":0,"illusion":50,"seal":25,"drain":0,"confusion":0,"sleep":25,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["会心率アップ大","氷結のコツ","秘めたるチカラ"],"lTraits":["1〜3回行動","背水の陣","最後の息吹"]},
+      "スカルガルー": {"hp":1370,"mp":450,"atk":630,"def":380,"spd":450,"wis":530,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":25,"death":25},"sTraits":["こんらんブレイク大","いきなりピオラ","きょうせんし"],"lTraits":["1〜3回行動","ピンチで会心","こんらん攻撃"]},
+      "スカルライダー": {"hp":1400,"mp":430,"atk":520,"def":370,"spd":480,"wis":600,"sAction":"1-2","lAction":"1-2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":25,"dark":25,"weak":0,"illusion":-25,"seal":25,"drain":50,"confusion":0,"sleep":25,"paralyze":25,"rest":0,"poison":50,"death":0},"sTraits":["1〜2回行動","くじけぬ心","きょうせんし"],"lTraits":["ときどきピオラ","地ブレイク大","アンチみかわし"]},
+      "スキッパー": {"hp":1340,"mp":380,"atk":560,"def":630,"spd":530,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":25,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":50,"weak":25,"illusion":-25,"seal":0,"drain":50,"confusion":50,"sleep":0,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["弱体化ブレイク大","みかわしアップ大","封じブレイク大"],"lTraits":["1〜3回行動","いきなりピオラ","ラストスタンド"]},
+      "ズッキーニャ": {"hp":1330,"mp":460,"atk":590,"def":560,"spd":490,"wis":500,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":0,"lightning":0,"light":50,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":0,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":50,"death":0},"sTraits":["ヘロヘロボディ","弱体化ブレイク大","爆発のコツ"],"lTraits":["1〜3回行動","おいうち","全体攻撃"]},
+      "スノーム": {"hp":1390,"mp":480,"atk":510,"def":580,"spd":390,"wis":580,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":25,"wind":0,"earth":-25,"blast":50,"ice":100,"lightning":50,"light":0,"dark":-25,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":25,"paralyze":50,"rest":25,"poison":0,"death":0},"sTraits":["氷結のコツ","いきなりピオラ","ザキ攻撃"],"lTraits":["1〜3回行動","氷結ブレイク大","最後のあがき"]},
+      "スマイルリザード": {"hp":1430,"mp":360,"atk":460,"def":350,"spd":630,"wis":390,"sAction":"1","lAction":"2","res":{"fire":50,"water":-25,"wind":25,"earth":0,"blast":50,"ice":0,"lightning":25,"light":25,"dark":0,"weak":-25,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":25,"paralyze":50,"rest":50,"poison":-25,"death":25},"sTraits":["れんぞく×4","きょうせんし","たいでんたいしつ"],"lTraits":["2回行動","火ブレイク大","全体攻撃"]},
+      "スモーク": {"hp":1290,"mp":450,"atk":540,"def":580,"spd":590,"wis":550,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":-25,"earth":25,"blast":0,"ice":25,"lightning":25,"light":25,"dark":25,"weak":0,"illusion":0,"seal":50,"drain":25,"confusion":0,"sleep":0,"paralyze":25,"rest":0,"poison":25,"death":25},"sTraits":["かいひほんのう","ときどきまもりの霧","幻惑ブレイク大"],"lTraits":["1〜3回行動","みかわしアップ超","魔力の強風"]},
+      "スライム": {"hp":1420,"mp":410,"atk":460,"def":380,"spd":650,"wis":310,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":0,"earth":-25,"blast":50,"ice":0,"lightning":75,"light":50,"dark":-25,"weak":0,"illusion":50,"seal":0,"drain":-25,"confusion":25,"sleep":0,"paralyze":75,"rest":0,"poison":25,"death":0},"sTraits":["電撃のコツ","会心率アップ大","ラージキラー"],"lTraits":["1〜3回行動","いきなりピオラ","ファイターズハイ"]},
+      "スライムカルゴ": {"hp":1410,"mp":470,"atk":480,"def":820,"spd":240,"wis":630,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":0,"earth":-25,"blast":50,"ice":50,"lightning":50,"light":25,"dark":-25,"weak":0,"illusion":50,"seal":25,"drain":-25,"confusion":25,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["いきなりスカラ","ときどきまもりの霧","ぐるぐるボディ"],"lTraits":["1〜3回行動","魔力の強風","封じブレイク大"]},
+      "スライムコロネ": {"hp":1390,"mp":460,"atk":560,"def":420,"spd":440,"wis":560,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":50,"wind":0,"earth":-25,"blast":50,"ice":25,"lightning":50,"light":0,"dark":-25,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":25,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["ラブリー","魔力の風","最後の息吹"],"lTraits":["1〜3回行動","やまびこ","おだてじょうず"]},
+      "スライムつむり": {"hp":1430,"mp":520,"atk":400,"def":840,"spd":300,"wis":520,"sAction":"1","lAction":"1-2","res":{"fire":0,"water":25,"wind":0,"earth":-25,"blast":50,"ice":50,"lightning":50,"light":25,"dark":-25,"weak":0,"illusion":50,"seal":50,"drain":-25,"confusion":0,"sleep":0,"paralyze":50,"rest":0,"poison":25,"death":0},"sTraits":["ときどきスカラ","やいばのボディ","ラブリー"],"lTraits":["1〜2回行動","癒やしの大力","マヒブレイク大"]},
+      "スライムツリー": {"hp":1360,"mp":550,"atk":520,"def":320,"spd":490,"wis":670,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":0,"earth":0,"blast":25,"ice":25,"lightning":50,"light":50,"dark":-25,"weak":0,"illusion":50,"seal":25,"drain":-25,"confusion":0,"sleep":25,"paralyze":75,"rest":0,"poison":0,"death":0},"sTraits":["ときどきインテ","マヒ攻撃","みかわしアップ大"],"lTraits":["1〜3回行動","癒やしの大力","マヒブレイク大"]},
+      "スライムナイト": {"hp":1330,"mp":420,"atk":580,"def":590,"spd":480,"wis":550,"sAction":"1-2","lAction":"1-2","res":{"fire":25,"water":25,"wind":25,"earth":-25,"blast":25,"ice":25,"lightning":50,"light":25,"dark":-25,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":25,"paralyze":75,"rest":0,"poison":0,"death":0},"sTraits":["1〜2回行動","くじけぬ心","ラージキラー"],"lTraits":["ピンチで会心","爆発ブレイク大","いきなりバイキルト"]},
+      "スライムベス": {"hp":1490,"mp":400,"atk":510,"def":360,"spd":490,"wis":280,"sAction":"1","lAction":"2-3","res":{"fire":50,"water":0,"wind":0,"earth":0,"blast":25,"ice":0,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":-25,"confusion":25,"sleep":0,"paralyze":75,"rest":25,"poison":0,"death":0},"sTraits":["火のコツ","ときどきピオラ","ロケットスタート"],"lTraits":["2〜3回行動","きょうせんし","火ブレイク大"]},
+      "ソルジャーブル": {"hp":1360,"mp":330,"atk":640,"def":530,"spd":510,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":0,"ice":-25,"lightning":0,"light":25,"dark":25,"weak":0,"illusion":0,"seal":25,"drain":25,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":25,"death":0},"sTraits":["スヤスヤボディ","いきなりスカラ","ラストスタンド"],"lTraits":["1〜3回行動","とうそうほんのう","秘めたるチカラ"]},
+      "たけやりへい": {"hp":1400,"mp":310,"atk":580,"def":500,"spd":510,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":-25,"earth":0,"blast":0,"ice":50,"lightning":50,"light":25,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["弱体化ブレイク大","かいひほんのう","いきなりスカラ"],"lTraits":["1〜3回行動","わるあがき","全ガードブレイク"]},
+      "ダッシュラン": {"hp":1340,"mp":340,"atk":620,"def":480,"spd":640,"wis":300,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":50,"blast":50,"ice":0,"lightning":0,"light":25,"dark":0,"weak":50,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":25,"paralyze":0,"rest":50,"poison":-25,"death":0},"sTraits":["ロケットスタート","ねがえり","ピンチで会心"],"lTraits":["1〜3回行動","ときどきピオラ","とうそうほんのう"]},
+      "タマゴロン": {"hp":1410,"mp":410,"atk":480,"def":580,"spd":480,"wis":450,"sAction":"1","lAction":"2","res":{"fire":0,"water":0,"wind":25,"earth":0,"blast":25,"ice":0,"lightning":75,"light":50,"dark":-25,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":0,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["マホキテボディ","封じブレイク大","ときどきピオラ"],"lTraits":["2回行動","光のコツ","マヒブレイク大"]},
+      "たまねぎスライム": {"hp":1410,"mp":430,"atk":510,"def":530,"spd":570,"wis":240,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":0,"earth":0,"blast":25,"ice":0,"lightning":50,"light":50,"dark":-25,"weak":0,"illusion":50,"seal":0,"drain":-25,"confusion":50,"sleep":0,"paralyze":50,"rest":25,"poison":0,"death":0},"sTraits":["地のコツ","幻惑ブレイク大","ときどきまもりの霧"],"lTraits":["1〜3回行動","セラピー","ひかりのはどう"]},
+      "ちゅうまじゅう": {"hp":1420,"mp":320,"atk":580,"def":570,"spd":430,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":25,"earth":50,"blast":25,"ice":25,"lightning":25,"light":0,"dark":0,"weak":25,"illusion":25,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["ショック攻撃","ときどきスカラ","地のコツ"],"lTraits":["1〜3回行動","しっぺがえし","休みブレイク大"]},
+      "チンチロむし": {"hp":1300,"mp":440,"atk":500,"def":410,"spd":680,"wis":590,"sAction":"1","lAction":"2-3","res":{"fire":-25,"water":0,"wind":-25,"earth":50,"blast":0,"ice":25,"lightning":50,"light":50,"dark":25,"weak":25,"illusion":25,"seal":25,"drain":25,"confusion":50,"sleep":-25,"paralyze":25,"rest":0,"poison":0,"death":0},"sTraits":["てんしの音色","かいひほんのう","セラピー"],"lTraits":["2〜3回行動","ねむり攻撃","やまびこ"]},
+      "テールイーター": {"hp":1410,"mp":530,"atk":580,"def":360,"spd":410,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":0,"lightning":0,"light":0,"dark":25,"weak":-25,"illusion":0,"seal":0,"drain":50,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["どく攻撃","いきなりマホカンタ","マホキテボディ"],"lTraits":["1〜3回行動","氷結ブレイク大","全体攻撃"]},
+      "デザートデーモン": {"hp":1370,"mp":380,"atk":600,"def":500,"spd":460,"wis":520,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":50,"wind":50,"earth":0,"blast":0,"ice":0,"lightning":-25,"light":25,"dark":0,"weak":50,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":25,"paralyze":-25,"rest":0,"poison":0,"death":0},"sTraits":["会心率アップ大","いきなりインテ","メタルハンター"],"lTraits":["1〜3回行動","アンチみかわし","爆発ブレイク大"]},
+      "デビルパイン": {"hp":1370,"mp":330,"atk":580,"def":540,"spd":530,"wis":430,"sAction":"1","lAction":"2-3","res":{"fire":25,"water":50,"wind":0,"earth":0,"blast":0,"ice":50,"lightning":-25,"light":0,"dark":50,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":50,"sleep":0,"paralyze":-25,"rest":0,"poison":25,"death":25},"sTraits":["どくブレイク大","MP吸収ブレイク大","こんらんブレイク大"],"lTraits":["2〜3回行動","ねむりブレイク大","即死ブレイク大"]},
+      "デンデン竜": {"hp":1400,"mp":310,"atk":650,"def":590,"spd":430,"wis":340,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":0,"blast":50,"ice":0,"lightning":25,"light":25,"dark":25,"weak":0,"illusion":50,"seal":0,"drain":25,"confusion":0,"sleep":0,"paralyze":50,"rest":50,"poison":-25,"death":0},"sTraits":["幻惑ブレイク大","ピンチで会心","ときどきバイキルト"],"lTraits":["1〜3回行動","スモールキラー","火ブレイク大"]},
+      "とけぼうず": {"hp":1410,"mp":340,"atk":490,"def":540,"spd":480,"wis":540,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":50,"blast":75,"ice":0,"lightning":50,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":-25,"sleep":50,"paralyze":0,"rest":0,"poison":50,"death":25},"sTraits":["ときどきバイキルト","徒手空拳","爆発のコツ"],"lTraits":["1〜3回行動","やいばのボディ","全ガードブレイク"]},
+      "とさかへび": {"hp":1310,"mp":290,"atk":640,"def":460,"spd":640,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":0,"earth":-25,"blast":100,"ice":0,"lightning":0,"light":50,"dark":25,"weak":25,"illusion":50,"seal":0,"drain":0,"confusion":25,"sleep":0,"paralyze":0,"rest":25,"poison":25,"death":0},"sTraits":["会心率アップ大","いきなりピオラ","みかわしアップ大"],"lTraits":["1〜3回行動","ロケットスタート","最後のあがき"]},
+      "とらおとこ": {"hp":1350,"mp":340,"atk":590,"def":620,"spd":480,"wis":500,"sAction":"1","lAction":"2-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["ピンチで会心","きょうせんし","アンチみかわし"],"lTraits":["2〜3回行動","休みブレイク大","いきなりバイキルト"]},
+      "ドラキー": {"hp":1260,"mp":490,"atk":480,"def":440,"spd":780,"wis":510,"sAction":"1","lAction":"2","res":{"fire":25,"water":25,"wind":50,"earth":25,"blast":0,"ice":0,"lightning":-25,"light":0,"dark":50,"weak":25,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":0,"death":25},"sTraits":["闇のコツ","いきなりピオラ","ラージキラー"],"lTraits":["2回行動","みかわしアップ大","幻惑ブレイク大"]},
+      "ドラゴスライム": {"hp":1380,"mp":460,"atk":540,"def":380,"spd":580,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":0,"earth":-25,"blast":50,"ice":0,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":25,"drain":-25,"confusion":0,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["みかわしアップ大","いきなりピオラ","ピンチで会心"],"lTraits":["1〜3回行動","火ブレイク大","火のコツ"]},
+      "ドラゴンキッズ": {"hp":1450,"mp":470,"atk":530,"def":340,"spd":510,"wis":310,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":25,"earth":0,"blast":50,"ice":0,"lightning":0,"light":25,"dark":25,"weak":0,"illusion":25,"seal":25,"drain":25,"confusion":0,"sleep":0,"paralyze":25,"rest":75,"poison":-25,"death":0},"sTraits":["会心率アップ大","ラージキラー","ときどきバイキルト"],"lTraits":["1〜3回行動","火ブレイク大","プレッシャー"]},
+      "ドラムゴート": {"hp":1400,"mp":460,"atk":610,"def":450,"spd":410,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":0,"blast":25,"ice":50,"lightning":50,"light":50,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":50,"poison":50,"death":0},"sTraits":["れんぞく×2","ツッコミ","最後の息吹"],"lTraits":["1〜3回行動","おだてじょうず","いきなりバイキルト"]},
+      "ドルイド": {"hp":1340,"mp":510,"atk":410,"def":590,"spd":520,"wis":680,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":25,"dark":25,"weak":0,"illusion":0,"seal":50,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":0,"death":0},"sTraits":["れんぞく×2","魔力暴走率アップ大","いきなりインテ"],"lTraits":["1〜3回行動","マジシャンズハイ","MP吸収ブレイク大"]},
+      "トルトリーナ": {"hp":1330,"mp":470,"atk":580,"def":430,"spd":630,"wis":360,"sAction":"1","lAction":"2","res":{"fire":0,"water":25,"wind":-25,"earth":25,"blast":0,"ice":50,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":25,"rest":0,"poison":50,"death":50},"sTraits":["ねむりブレイク大","ビリビリボディ","セラピー"],"lTraits":["2回行動","おいうち","全ガードブレイク"]},
+      "ドロザラー": {"hp":1390,"mp":540,"atk":490,"def":540,"spd":430,"wis":520,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":50,"blast":0,"ice":50,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["地のコツ","幻惑ブレイク大","くじけぬ心"],"lTraits":["1〜3回行動","ときどきまもりの霧","封じブレイク大"]},
+      "どろにんぎょう": {"hp":1380,"mp":460,"atk":610,"def":540,"spd":480,"wis":300,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":-25,"earth":50,"blast":0,"ice":50,"lightning":50,"light":0,"dark":0,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["地のコツ","休みブレイク大","根に持つタイプ"],"lTraits":["1〜3回行動","ときどきスカラ","徒手空拳"]},
+      "ドロヌーバ": {"hp":1380,"mp":530,"atk":600,"def":590,"spd":310,"wis":540,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":-25,"earth":50,"blast":0,"ice":50,"lightning":50,"light":-25,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":25},"sTraits":["地のコツ","ときどきスカラ","ギャンブルボディ"],"lTraits":["1〜3回行動","どくブレイク大","最後のあがき"]},
+      "トロピカルスライム": {"hp":1400,"mp":380,"atk":470,"def":510,"spd":510,"wis":550,"sAction":"1","lAction":"2-3","res":{"fire":25,"water":25,"wind":0,"earth":0,"blast":0,"ice":25,"lightning":50,"light":50,"dark":-25,"weak":0,"illusion":25,"seal":25,"drain":-25,"confusion":0,"sleep":50,"paralyze":50,"rest":0,"poison":25,"death":0},"sTraits":["マホキテボディ","癒やしの力","ねむりブレイク大"],"lTraits":["2〜3回行動","医術士","休みブレイク大"]},
+      "ドロル": {"hp":1350,"mp":420,"atk":540,"def":500,"spd":590,"wis":420,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":25,"sleep":0,"paralyze":25,"rest":0,"poison":50,"death":25},"sTraits":["封じブレイク大","MP吸収ブレイク大","マホキテボディ"],"lTraits":["2回行動","どく攻撃","しっぺがえし"]},
+      "どんぐりベビー": {"hp":1420,"mp":450,"atk":590,"def":560,"spd":360,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":0,"earth":50,"blast":-25,"ice":25,"lightning":50,"light":0,"dark":25,"weak":0,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["れんぞく×6","セラピー","ラージキラー"],"lTraits":["1〜3回行動","最後のあがき","全体攻撃"]},
+      "ナイトウイプス": {"hp":1330,"mp":490,"atk":550,"def":410,"spd":530,"wis":620,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":0,"earth":75,"blast":0,"ice":0,"lightning":50,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":50,"drain":50,"confusion":0,"sleep":0,"paralyze":0,"rest":0,"poison":50,"death":25},"sTraits":["みかわしアップ大","ミラクル攻撃","ピンチで魔力暴走"],"lTraits":["1〜3回行動","いやがらせ","根に持つタイプ"]},
+      "ナスビナーラ": {"hp":1360,"mp":610,"atk":490,"def":440,"spd":480,"wis":570,"sAction":"1","lAction":"2","res":{"fire":0,"water":50,"wind":0,"earth":50,"blast":-25,"ice":0,"lightning":25,"light":25,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":25,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":50,"death":0},"sTraits":["みかわしアップ大","こんらん攻撃","ヘロヘロボディ"],"lTraits":["2回行動","いきなりピオラ","休みブレイク大"]},
+      "ぬすっとウサギ": {"hp":1340,"mp":350,"atk":610,"def":430,"spd":590,"wis":460,"sAction":"1","lAction":"2","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":0,"seal":50,"drain":0,"confusion":-25,"sleep":50,"paralyze":25,"rest":50,"poison":0,"death":0},"sTraits":["きょうせんし","いきなりピオラ","くじけぬ心"],"lTraits":["2回行動","ロケットスタート","ぐるぐるボディ"]},
+      "パールスライム": {"hp":1390,"mp":410,"atk":460,"def":610,"spd":470,"wis":560,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":25,"earth":-25,"blast":25,"ice":25,"lightning":25,"light":25,"dark":0,"weak":25,"illusion":25,"seal":0,"drain":-25,"confusion":0,"sleep":25,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["ぼうえいほんのう","ときどきスカラ","メタルキラー"],"lTraits":["1〜3回行動","水のコツ","背水の陣"]},
+      "はなカワセミ": {"hp":1320,"mp":430,"atk":520,"def":540,"spd":620,"wis":470,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":50,"earth":50,"blast":50,"ice":25,"lightning":0,"light":-25,"dark":0,"weak":0,"illusion":50,"seal":0,"drain":25,"confusion":0,"sleep":25,"paralyze":50,"rest":-25,"poison":0,"death":25},"sTraits":["れんぞく×4","いきなりピオラ","回復のコツ"],"lTraits":["1〜3回行動","みかわしアップ超","セラピー"]},
+      "はなまきドラゴ": {"hp":1380,"mp":570,"atk":630,"def":370,"spd":450,"wis":380,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":50,"blast":50,"ice":0,"lightning":0,"light":25,"dark":0,"weak":50,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["くじけぬ心","メタルハンター","いきなりピオラ"],"lTraits":["1〜3回行動","火ブレイク大","電撃ブレイク大"]},
+      "はねスライム": {"hp":1320,"mp":490,"atk":520,"def":360,"spd":640,"wis":550,"sAction":"1","lAction":"2","res":{"fire":0,"water":0,"wind":75,"earth":-25,"blast":25,"ice":0,"lightning":50,"light":50,"dark":-25,"weak":0,"illusion":75,"seal":0,"drain":-25,"confusion":0,"sleep":0,"paralyze":75,"rest":25,"poison":0,"death":0},"sTraits":["みかわしアップ大","回復のコツ","マホトラ攻撃"],"lTraits":["2回行動","魔力の強風","風ブレイク大"]},
+      "バブルスライム": {"hp":1440,"mp":660,"atk":460,"def":500,"spd":410,"wis":340,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":0,"earth":-25,"blast":25,"ice":25,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":-25,"paralyze":50,"rest":0,"poison":75,"death":0},"sTraits":["どくどくボディ","いきなりピオラ","どくブレイク大"],"lTraits":["1〜3回行動","みかわしアップ大","ラブリー"]},
+      "はりつきあくま": {"hp":1360,"mp":470,"atk":460,"def":450,"spd":550,"wis":620,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":25,"blast":0,"ice":0,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":50,"paralyze":0,"rest":0,"poison":0,"death":0},"sTraits":["魔力暴走率アップ大","魔力の風","闇のコツ"],"lTraits":["1〜3回行動","マジシャンズハイ","マヒブレイク大"]},
+      "ピクシードラゴン": {"hp":1320,"mp":440,"atk":490,"def":460,"spd":620,"wis":600,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":25,"earth":0,"blast":50,"ice":25,"lightning":25,"light":0,"dark":0,"weak":0,"illusion":50,"seal":0,"drain":0,"confusion":25,"sleep":0,"paralyze":0,"rest":50,"poison":0,"death":25},"sTraits":["ラブリー","魔力の風","ときどきまもりの霧"],"lTraits":["1〜3回行動","おだてじょうず","ひかりのはどう"]},
+      "ピッキー": {"hp":1320,"mp":550,"atk":590,"def":340,"spd":580,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":50,"blast":-25,"ice":25,"lightning":25,"light":-25,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["れんぞく×3","こんらん攻撃","ファイターズハイ"],"lTraits":["1〜3回行動","おいうち","こんらんブレイク大"]},
+      "ビッグハット": {"hp":1360,"mp":410,"atk":470,"def":630,"spd":490,"wis":600,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":0,"ice":-25,"lightning":0,"light":25,"dark":25,"weak":-25,"illusion":0,"seal":25,"drain":75,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["スヤスヤボディ","ラストスタンド","最後の息吹"],"lTraits":["1〜3回行動","ときどきインテ","会心率アップ超"]},
+      "ビッグモアイ": {"hp":1400,"mp":410,"atk":560,"def":600,"spd":320,"wis":630,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":50,"light":0,"dark":0,"weak":0,"illusion":0,"seal":50,"drain":0,"confusion":0,"sleep":0,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["プレッシャー","地のコツ","わるあがき"],"lTraits":["1〜3回行動","ツッコミ","地ブレイク大"]},
+      "びっくりサタン": {"hp":1360,"mp":460,"atk":410,"def":560,"spd":570,"wis":580,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":50,"wind":50,"earth":0,"blast":0,"ice":0,"lightning":-25,"light":0,"dark":50,"weak":25,"illusion":0,"seal":25,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":0,"death":0},"sTraits":["みかわしアップ大","いきなりインテ","ツッコミ"],"lTraits":["1〜3回行動","しっぺがえし","闇ブレイク大"]},
+      "ひとくいサーベル": {"hp":1330,"mp":360,"atk":600,"def":510,"spd":580,"wis":450,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":25,"blast":25,"ice":50,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":0,"seal":50,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["みかわしアップ大","ピンチで会心","アンチみかわし"],"lTraits":["1〜3回行動","ねがえり","いきなりバイキルト"]},
+      "ひとくいばこ": {"hp":1380,"mp":280,"atk":640,"def":590,"spd":450,"wis":430,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":0,"blast":50,"ice":50,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["ピンチで会心","アンチみかわし","即死ブレイク大"],"lTraits":["1〜3回行動","ザキ攻撃","プレッシャー"]},
+      "ファーラット": {"hp":1420,"mp":570,"atk":470,"def":420,"spd":390,"wis":610,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":0,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":25,"weak":-25,"illusion":25,"seal":0,"drain":50,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":25,"death":0},"sTraits":["みかわしアップ大","スヤスヤボディ","ラブリー"],"lTraits":["1〜3回行動","いきなりピオラ","ねむりブレイク大"]},
+      "フーセンドラゴン": {"hp":1420,"mp":320,"atk":590,"def":590,"spd":410,"wis":410,"sAction":"1","lAction":"1-2","res":{"fire":50,"water":-25,"wind":50,"earth":0,"blast":50,"ice":0,"lightning":0,"light":25,"dark":0,"weak":50,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["爆発のコツ","光のコツ","火ブレイク大"],"lTraits":["1〜2回行動","最後のあがき","爆発ブレイク大"]},
+      "フェアリードラゴン": {"hp":1320,"mp":450,"atk":460,"def":250,"spd":800,"wis":500,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":25,"earth":25,"blast":50,"ice":0,"lightning":0,"light":25,"dark":0,"weak":-25,"illusion":50,"seal":0,"drain":25,"confusion":0,"sleep":50,"paralyze":25,"rest":50,"poison":-25,"death":0},"sTraits":["幻惑ブレイク大","最後の息吹","ヘロヘロボディ"],"lTraits":["1〜3回行動","いきなりピオラ","休みブレイク大"]},
+      "フォンデュ": {"hp":1390,"mp":480,"atk":500,"def":400,"spd":490,"wis":580,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":50,"blast":25,"ice":50,"lightning":50,"light":0,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":50,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["ヘロヘロボディ","いきなりインテ","ツッコミ"],"lTraits":["1〜3回行動","魔力の強風","休みブレイク大"]},
+      "プチアーノン": {"hp":1400,"mp":520,"atk":530,"def":460,"spd":400,"wis":560,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":100,"wind":0,"earth":50,"blast":-25,"ice":0,"lightning":-25,"light":25,"dark":50,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["水のコツ","みかわしアップ大","MP吸収ブレイク大"],"lTraits":["1〜3回行動","魔力の強風","ラブリー"]},
+      "ぶちスライム": {"hp":1420,"mp":460,"atk":510,"def":450,"spd":510,"wis":370,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":0,"earth":-25,"blast":50,"ice":25,"lightning":50,"light":25,"dark":-25,"weak":25,"illusion":50,"seal":25,"drain":-25,"confusion":0,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["ツッコミ","ラブリー","電撃ブレイク大"],"lTraits":["1〜3回行動","ちからため","全体攻撃"]},
+      "プテラノドン": {"hp":1370,"mp":360,"atk":580,"def":350,"spd":620,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":50,"earth":-25,"blast":50,"ice":0,"lightning":25,"light":0,"dark":25,"weak":0,"illusion":50,"seal":25,"drain":0,"confusion":0,"sleep":25,"paralyze":0,"rest":50,"poison":-25,"death":25},"sTraits":["徒手空拳","風のコツ","しっぺがえし"],"lTraits":["1〜3回行動","ときどきピオラ","みかわしアップ超"]},
+      "ふゆうじゅ": {"hp":1440,"mp":430,"atk":580,"def":370,"spd":410,"wis":460,"sAction":"1","lAction":"2","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":25,"light":0,"dark":50,"weak":0,"illusion":-25,"seal":25,"drain":50,"confusion":0,"sleep":0,"paralyze":25,"rest":0,"poison":50,"death":25},"sTraits":["こんらんブレイク大","マホキテボディ","ねがえり"],"lTraits":["2回行動","みかわしアップ大","電撃ブレイク大"]},
+      "フロッガー": {"hp":1410,"mp":360,"atk":560,"def":450,"spd":520,"wis":390,"sAction":"1","lAction":"2","res":{"fire":25,"water":75,"wind":0,"earth":25,"blast":-25,"ice":0,"lightning":0,"light":25,"dark":25,"weak":0,"illusion":50,"seal":0,"drain":0,"confusion":0,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["水のコツ","みかわしアップ大","マホトラ攻撃"],"lTraits":["2回行動","ねがえり","こんらんブレイク大"]},
+      "ベビークラウド": {"hp":1370,"mp":320,"atk":580,"def":440,"spd":600,"wis":400,"sAction":"1","lAction":"2","res":{"fire":50,"water":25,"wind":-25,"earth":50,"blast":0,"ice":0,"lightning":25,"light":0,"dark":25,"weak":25,"illusion":0,"seal":25,"drain":25,"confusion":-25,"sleep":50,"paralyze":0,"rest":0,"poison":25,"death":25},"sTraits":["ギャンブルボディ","ときどきスカラ","ねむり攻撃"],"lTraits":["2回行動","ねむりブレイク大","こんらんブレイク大"]},
+      "ベビーサタン": {"hp":1300,"mp":310,"atk":570,"def":530,"spd":570,"wis":680,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":25,"wind":25,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":50,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":0,"death":50},"sTraits":["ときどきインテ","爆発のコツ","マジシャンズハイ"],"lTraits":["1〜3回行動","やまびこ","マホキテボディ"]},
+      "ベビーパンサー": {"hp":1400,"mp":310,"atk":550,"def":550,"spd":570,"wis":300,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":25,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":0,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":25,"sleep":0,"paralyze":25,"rest":50,"poison":0,"death":25},"sTraits":["きょうせんし","ショック攻撃","ラブリー"],"lTraits":["1〜3回行動","休みブレイク大","全体攻撃"]},
+      "ポイズンリザード": {"hp":1380,"mp":430,"atk":610,"def":460,"spd":420,"wis":530,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":0,"blast":50,"ice":25,"lightning":0,"light":25,"dark":25,"weak":-25,"illusion":50,"seal":0,"drain":50,"confusion":0,"sleep":0,"paralyze":0,"rest":50,"poison":25,"death":0},"sTraits":["どくどくボディ","きょうせんし","ピンチで会心"],"lTraits":["1〜3回行動","どくブレイク大","いきなりバイキルト"]},
+      "ホイップゴースト": {"hp":1420,"mp":490,"atk":440,"def":540,"spd":460,"wis":490,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":50,"light":0,"dark":25,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":25,"sleep":0,"paralyze":50,"rest":0,"poison":50,"death":0},"sTraits":["ギャンブルボディ","みかわしアップ大","ツッコミ"],"lTraits":["1〜3回行動","魔力の強風","風のコツ"]},
+      "ホイミスライム": {"hp":1320,"mp":620,"atk":330,"def":420,"spd":660,"wis":700,"sAction":"1","lAction":"2","res":{"fire":0,"water":25,"wind":0,"earth":0,"blast":25,"ice":0,"lightning":50,"light":50,"dark":0,"weak":0,"illusion":25,"seal":25,"drain":0,"confusion":25,"sleep":0,"paralyze":50,"rest":0,"poison":0,"death":25},"sTraits":["回復のコツ","ときどきまもりの霧","最後の息吹"],"lTraits":["2回行動","みかわしアップ大","マホキテボディ"]},
+      "ボックススライム": {"hp":1420,"mp":640,"atk":450,"def":610,"spd":280,"wis":610,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":0,"earth":-25,"blast":25,"ice":0,"lightning":50,"light":50,"dark":0,"weak":0,"illusion":50,"seal":25,"drain":-25,"confusion":25,"sleep":0,"paralyze":75,"rest":0,"poison":0,"death":0},"sTraits":["封じブレイク大","ミラクル攻撃","かいひほんのう"],"lTraits":["1〜3回行動","ビリビリボディ","星のおくりもの"]},
+      "ポンポコだぬき": {"hp":1350,"mp":350,"atk":580,"def":600,"spd":530,"wis":430,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":25,"blast":25,"ice":-25,"lightning":0,"light":25,"dark":0,"weak":-25,"illusion":25,"seal":0,"drain":0,"confusion":-25,"sleep":50,"paralyze":50,"rest":50,"poison":25,"death":0},"sTraits":["こんらんブレイク大","しっぺがえし","ときどきピオラ"],"lTraits":["1〜3回行動","ぐるぐるボディ","ザキ攻撃"]},
+      "マーマン": {"hp":1350,"mp":380,"atk":570,"def":600,"spd":530,"wis":420,"sAction":"1","lAction":"2","res":{"fire":0,"water":75,"wind":50,"earth":0,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":25,"weak":0,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":25,"paralyze":-25,"rest":25,"poison":25,"death":0},"sTraits":["封じブレイク大","回復のコツ","ミラクル攻撃"],"lTraits":["2回行動","癒やしの大力","弱体化ブレイク大"]},
+      "マグマスライム": {"hp":1350,"mp":410,"atk":530,"def":460,"spd":540,"wis":590,"sAction":"1","lAction":"1-3","res":{"fire":100,"water":-25,"wind":0,"earth":25,"blast":0,"ice":-25,"lightning":0,"light":100,"dark":-25,"weak":0,"illusion":75,"seal":0,"drain":-25,"confusion":0,"sleep":25,"paralyze":75,"rest":0,"poison":0,"death":0},"sTraits":["火のコツ","とうそうほんのう","くじけぬ心"],"lTraits":["1〜3回行動","ファイターズハイ","火ブレイク大"]},
+      "マドハンド": {"hp":1420,"mp":550,"atk":560,"def":400,"spd":430,"wis":390,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":25,"wind":0,"earth":50,"blast":25,"ice":50,"lightning":25,"light":0,"dark":0,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":0,"sleep":25,"paralyze":25,"rest":25,"poison":50,"death":0},"sTraits":["こんらん攻撃","地のコツ","封じブレイク大"],"lTraits":["1〜3回行動","ツッコミ","こんらんブレイク大"]},
+      "まほうつかい": {"hp":1360,"mp":530,"atk":430,"def":440,"spd":550,"wis":630,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":25,"wind":0,"earth":0,"blast":25,"ice":25,"lightning":-25,"light":0,"dark":50,"weak":0,"illusion":0,"seal":50,"drain":75,"confusion":50,"sleep":0,"paralyze":-25,"rest":0,"poison":-25,"death":25},"sTraits":["封じブレイク大","ときどきスカラ","魔力暴走率アップ大"],"lTraits":["1〜3回行動","魔力の強風","氷結ブレイク大"]},
+      "マンドラ": {"hp":1370,"mp":490,"atk":520,"def":450,"spd":520,"wis":500,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":25,"wind":0,"earth":25,"blast":0,"ice":25,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":50,"sleep":0,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["みかわしアップ大","かいひほんのう","休みブレイク大"],"lTraits":["1〜3回行動","最後のあがき","全体攻撃"]},
+      "ミイラおとこ": {"hp":1400,"mp":420,"atk":580,"def":580,"spd":450,"wis":340,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":25,"earth":50,"blast":25,"ice":50,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":-25,"seal":25,"drain":50,"confusion":0,"sleep":50,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["ねむりブレイク大","ねむり攻撃","しっぺがえし"],"lTraits":["1〜3回行動","スヤスヤボディ","弱体化ブレイク大"]},
+      "ミステリドール": {"hp":1340,"mp":500,"atk":500,"def":550,"spd":490,"wis":610,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":-25,"earth":0,"blast":25,"ice":50,"lightning":50,"light":0,"dark":25,"weak":0,"illusion":50,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":25,"poison":50,"death":0},"sTraits":["弱体化ブレイク大","MP吸収ブレイク大","ときどきスカラ"],"lTraits":["1〜3回行動","会心完全ガード","封じブレイク大"]},
+      "むくろカサゴ": {"hp":1430,"mp":440,"atk":570,"def":380,"spd":380,"wis":600,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":0,"earth":0,"blast":0,"ice":25,"lightning":0,"light":0,"dark":75,"weak":25,"illusion":0,"seal":50,"drain":0,"confusion":0,"sleep":25,"paralyze":50,"rest":0,"poison":0,"death":0},"sTraits":["ビリビリボディ","風のコツ","ぼうえいほんのう"],"lTraits":["1〜3回行動","闇ブレイク大","やみのはどう"]},
+      "メーダ": {"hp":1400,"mp":450,"atk":530,"def":400,"spd":460,"wis":570,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":25,"blast":0,"ice":25,"lightning":-25,"light":0,"dark":25,"weak":0,"illusion":0,"seal":25,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":25,"death":0},"sTraits":["幻惑ブレイク大","光のコツ","マヒ攻撃"],"lTraits":["1〜3回行動","みかわしアップ大","マヒブレイク大"]},
+      "メソコボルト": {"hp":1360,"mp":390,"atk":520,"def":440,"spd":560,"wis":570,"sAction":"1","lAction":"2-3","res":{"fire":25,"water":25,"wind":25,"earth":25,"blast":25,"ice":0,"lightning":0,"light":0,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":0,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["いきなりピオラ","みかわしアップ大","かいひほんのう"],"lTraits":["2〜3回行動","ときどきまもりの霧","ふっかつの祈り"]},
+      "メタッピー": {"hp":1400,"mp":490,"atk":470,"def":730,"spd":440,"wis":360,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":0,"wind":-25,"earth":25,"blast":25,"ice":50,"lightning":50,"light":25,"dark":0,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":50,"poison":50,"death":0},"sTraits":["マホキテボディ","電撃のコツ","かいひほんのう"],"lTraits":["1〜3回行動","ときどきピオラ","みかわしアップ超"]},
+      "メタルハンター": {"hp":1350,"mp":300,"atk":680,"def":540,"spd":520,"wis":360,"sAction":"1-2","lAction":"1-2","res":{"fire":0,"water":0,"wind":-25,"earth":0,"blast":50,"ice":50,"lightning":50,"light":25,"dark":0,"weak":25,"illusion":0,"seal":0,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":50,"poison":50,"death":0},"sTraits":["1〜2回行動","メタルハンター","たいでんたいしつ"],"lTraits":["アンチみかわし","会心率アップ超","ショック攻撃"]},
+      "メラゴースト": {"hp":1400,"mp":520,"atk":350,"def":580,"spd":480,"wis":640,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":50,"blast":50,"ice":-25,"lightning":0,"light":50,"dark":0,"weak":0,"illusion":-25,"seal":0,"drain":50,"confusion":25,"sleep":0,"paralyze":25,"rest":25,"poison":50,"death":0},"sTraits":["火のコツ","みかわしアップ大","マホトラ攻撃"],"lTraits":["1〜3回行動","ときどきインテ","最後のあがき"]},
+      "モーモン": {"hp":1300,"mp":550,"atk":410,"def":440,"spd":700,"wis":590,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":25,"earth":0,"blast":50,"ice":25,"lightning":-25,"light":0,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":25,"confusion":50,"sleep":-25,"paralyze":-25,"rest":50,"poison":25,"death":25},"sTraits":["ショック攻撃","いきなりピオラ","秘めたるチカラ"],"lTraits":["1〜3回行動","みかわしアップ大","ラブリー"]},
+      "もみじこぞう": {"hp":1350,"mp":660,"atk":520,"def":330,"spd":610,"wis":350,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":25,"earth":50,"blast":-25,"ice":25,"lightning":0,"light":25,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":0,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":25,"death":0},"sTraits":["みかわしアップ大","こんらん攻撃","ツッコミ"],"lTraits":["1〜3回行動","最後のあがき","ラブリー"]},
+      "ももんじゃ": {"hp":1370,"mp":380,"atk":580,"def":620,"spd":520,"wis":320,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":0,"wind":50,"earth":0,"blast":25,"ice":25,"lightning":0,"light":25,"dark":0,"weak":0,"illusion":25,"seal":50,"drain":0,"confusion":0,"sleep":0,"paralyze":0,"rest":50,"poison":0,"death":25},"sTraits":["れんぞく×4","ラブリー","ツッコミ"],"lTraits":["1〜3回行動","休みブレイク大","全体攻撃"]},
+      "やみしばり": {"hp":1340,"mp":440,"atk":550,"def":430,"spd":530,"wis":610,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":0,"wind":0,"earth":50,"blast":0,"ice":50,"lightning":0,"light":0,"dark":75,"weak":0,"illusion":-25,"seal":75,"drain":50,"confusion":0,"sleep":0,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["ツッコミ","やいばのボディ","弱体化ブレイク大"],"lTraits":["1〜3回行動","魔力の強風","やみのはどう"]},
+      "ゆめにゅうどう": {"hp":1390,"mp":460,"atk":460,"def":420,"spd":510,"wis":620,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":0,"wind":50,"earth":0,"blast":25,"ice":-25,"lightning":0,"light":0,"dark":50,"weak":-25,"illusion":25,"seal":75,"drain":0,"confusion":-25,"sleep":50,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["ねむりブレイク大","MP吸収ブレイク大","しっぺがえし"],"lTraits":["1〜3回行動","きょうせんし","最後の息吹"]},
+      "ランタンこぞう": {"hp":1370,"mp":460,"atk":520,"def":590,"spd":430,"wis":570,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":-25,"wind":-25,"earth":0,"blast":25,"ice":50,"lightning":50,"light":50,"dark":0,"weak":0,"illusion":0,"seal":50,"drain":0,"confusion":50,"sleep":-25,"paralyze":0,"rest":0,"poison":50,"death":25},"sTraits":["火のコツ","ピンチで魔力暴走","わるあがき"],"lTraits":["1〜3回行動","くじけぬ心","爆発のコツ"]},
+      "ランドセーラー": {"hp":1370,"mp":430,"atk":690,"def":410,"spd":460,"wis":380,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":0,"blast":25,"ice":0,"lightning":-25,"light":-25,"dark":75,"weak":50,"illusion":0,"seal":0,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":0,"poison":0,"death":25},"sTraits":["ちからため","爆発のコツ","魔力の風"],"lTraits":["1〜3回行動","爆発ブレイク大","ふっかつの祈り"]},
+      "リップス": {"hp":1430,"mp":630,"atk":490,"def":530,"spd":370,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":0,"water":50,"wind":50,"earth":50,"blast":-25,"ice":25,"lightning":0,"light":0,"dark":0,"weak":-25,"illusion":0,"seal":50,"drain":25,"confusion":25,"sleep":50,"paralyze":50,"rest":-25,"poison":0,"death":0},"sTraits":["こんらん攻撃","いきなりインテ","ツッコミ"],"lTraits":["1〜3回行動","どくどくボディ","こんらんブレイク大"]},
+      "リリパット": {"hp":1460,"mp":470,"atk":480,"def":500,"spd":460,"wis":310,"sAction":"1","lAction":"2","res":{"fire":25,"water":25,"wind":25,"earth":25,"blast":25,"ice":0,"lightning":-25,"light":25,"dark":25,"weak":0,"illusion":25,"seal":0,"drain":50,"confusion":50,"sleep":0,"paralyze":-25,"rest":25,"poison":0,"death":25},"sTraits":["ときどきスカラ","おだてじょうず","しっぺがえし"],"lTraits":["2回行動","根に持つタイプ","全体攻撃"]},
+      "わかめ王子": {"hp":1280,"mp":540,"atk":580,"def":520,"spd":510,"wis":640,"sAction":"1","lAction":"1-3","res":{"fire":-25,"water":50,"wind":0,"earth":25,"blast":0,"ice":25,"lightning":0,"light":25,"dark":50,"weak":0,"illusion":-25,"seal":50,"drain":50,"confusion":0,"sleep":25,"paralyze":0,"rest":0,"poison":50,"death":0},"sTraits":["癒やしの力","ラージキラー","ときどきインテ"],"lTraits":["1〜3回行動","セラピー","全体攻撃"]},
+      "ワンワンダック": {"hp":1370,"mp":320,"atk":590,"def":520,"spd":550,"wis":400,"sAction":"1","lAction":"1-3","res":{"fire":25,"water":25,"wind":0,"earth":50,"blast":25,"ice":50,"lightning":-25,"light":25,"dark":-25,"weak":50,"illusion":-25,"seal":25,"drain":25,"confusion":25,"sleep":0,"paralyze":0,"rest":50,"poison":0,"death":0},"sTraits":["れんぞく×3","ラブリー","とうそうほんのう"],"lTraits":["1〜3回行動","会心率アップ超","ロケットスタート"]},
+      "毒つぼドラゴン": {"hp":1380,"mp":340,"atk":690,"def":370,"spd":490,"wis":410,"sAction":"1","lAction":"1-3","res":{"fire":50,"water":-25,"wind":0,"earth":25,"blast":50,"ice":0,"lightning":-25,"light":25,"dark":50,"weak":25,"illusion":50,"seal":0,"drain":-25,"confusion":0,"sleep":0,"paralyze":25,"rest":50,"poison":25,"death":0},"sTraits":["どくどくボディ","ねがえり","どく攻撃"],"lTraits":["1〜3回行動","癒やしの大力","全体攻撃"]},
     };
 
     const inputIds = [
@@ -1977,20 +2091,202 @@
 
     // 種族プルダウンの生成
     function populateMonsterSelect() {
-      const select = document.getElementById('monster-select');
-      if (!select) return;
-      select.innerHTML = '<option value="">-- 種族を選択して基準値を一括入力 --</option>';
-      Object.keys(monsterData).forEach((name) => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
+      // モーダル方式に変更したため空実装
+    }
+
+    // ひらがな・カタカナ正規化（ひらがな化して比較）
+    function normalizeStr(str) {
+      if (!str) return '';
+      return str.toLowerCase().replace(/[\u30a1-\u30f6]/g, function (match) {
+        return String.fromCharCode(match.charCodeAt(0) - 0x60);
       });
+    }
+
+    function openMonsterModal() {
+      const modal = document.getElementById('monster-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        filterMonsterList();
+      }
+    }
+
+    function closeMonsterModal() {
+      const modal = document.getElementById('monster-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    let monsterSearchMode = 'name'; // kept for backward compatibility if referenced elsewhere
+
+    function initMonsterTraitSelect() {
+      const select = document.getElementById('monster-trait-select');
+      if (!select || select.options.length > 1) return;
+
+      const traitSet = new Set();
+      Object.values(monsterData).forEach(m => {
+        (m.sTraits || []).forEach(t => traitSet.add(t));
+        (m.lTraits || []).forEach(t => traitSet.add(t));
+      });
+
+      const sortedTraits = Array.from(traitSet).sort((a, b) => a.localeCompare(b, 'ja'));
+      let html = '<option value="">-- すべての特性 --</option>';
+      sortedTraits.forEach(t => {
+        html += `<option value="${t}">${t}</option>`;
+      });
+      select.innerHTML = html;
+    }
+
+    function openMonsterModal() {
+      const modal = document.getElementById('monster-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        initMonsterTraitSelect();
+        filterMonsterList();
+      }
+    }
+
+    function closeMonsterModal() {
+      const modal = document.getElementById('monster-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    function clearMonsterFilter() {
+      const sInput = document.getElementById('monster-search-input');
+      const tSelect = document.getElementById('monster-trait-select');
+      const sortSelect = document.getElementById('monster-sort-select');
+      if (sInput) sInput.value = '';
+      if (tSelect) tSelect.value = '';
+      const incRadio = document.querySelector('input[name="include-l-trait"][value="include"]');
+      if (incRadio) incRadio.checked = true;
+      if (sortSelect) sortSelect.value = 'name';
+      filterMonsterList();
+    }
+
+    function filterMonsterList() {
+      const container = document.getElementById('monster-modal-list');
+      if (!container) return;
+
+      const query = normalizeStr(document.getElementById('monster-search-input')?.value || '');
+      const selectedTrait = document.getElementById('monster-trait-select')?.value || '';
+      const includeL = document.querySelector('input[name="include-l-trait"]:checked')?.value === 'include';
+      const sortKey = document.getElementById('monster-sort-select')?.value || 'name';
+
+      let list = Object.keys(monsterData).map(name => ({
+        name,
+        ...monsterData[name]
+      }));
+
+      // 1. 名称絞り込み
+      if (query) {
+        list = list.filter(m => normalizeStr(m.name).includes(query));
+      }
+
+      // 2. 特性絞り込み
+      if (selectedTrait) {
+        list = list.filter(m => {
+          const sHas = (m.sTraits || []).includes(selectedTrait);
+          const lHas = (m.lTraits || []).includes(selectedTrait);
+          if (includeL) {
+            return sHas || lHas;
+          } else {
+            return sHas;
+          }
+        });
+      }
+
+      // 3. ソート
+      if (sortKey === 'hp-desc') {
+        list.sort((a, b) => b.hp - a.hp);
+      } else if (sortKey === 'mp-desc') {
+        list.sort((a, b) => b.mp - a.mp);
+      } else if (sortKey === 'atk-desc') {
+        list.sort((a, b) => b.atk - a.atk);
+      } else if (sortKey === 'def-desc') {
+        list.sort((a, b) => b.def - a.def);
+      } else if (sortKey === 'spd-desc') {
+        list.sort((a, b) => b.spd - a.spd);
+      } else if (sortKey === 'wis-desc') {
+        list.sort((a, b) => b.wis - a.wis);
+      } else {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">条件に一致するモンスターがいません</div>`;
+        return;
+      }
+
+      let html = '';
+      list.forEach(m => {
+        html += `
+          <div onclick="selectMonsterFromModal('${m.name}')" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
+            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-color);">${m.name}</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function selectMonsterFromModal(name) {
+      const hiddenInput = document.getElementById('monster-select');
+      const selectBtn = document.getElementById('monster-select-btn');
+      if (hiddenInput) {
+        hiddenInput.value = name;
+      }
+      if (selectBtn) {
+        selectBtn.textContent = name;
+      }
+      closeMonsterModal();
+      applyMonsterStats(name);
+      calculate();
+      saveToLocalStorage();
+    }
+
+    // 所持特性バッジの更新
+    function updateMonsterTraitsDisplay() {
+      const container = document.getElementById('monster-traits-box');
+      const chipsWrapper = document.getElementById('traits-chips-container');
+      if (!container || !chipsWrapper) return;
+
+      const name = document.getElementById('monster-select')?.value;
+      if (!name || !monsterData[name] || !monsterData[name].sTraits) {
+        container.style.display = 'none';
+        return;
+      }
+
+      const m = monsterData[name];
+      const sizeRadio = document.querySelector('input[name="size"]:checked');
+      const size = sizeRadio ? sizeRadio.value : 'S';
+
+      let html = '';
+      (m.sTraits || []).forEach((tName) => {
+        html += `<span class="trait-chip">${tName}</span>`;
+      });
+
+      if (size === 'L' && m.lTraits && m.lTraits.length > 0) {
+        m.lTraits.forEach((tName) => {
+          html += `<span class="trait-chip l-trait">${tName}</span>`;
+        });
+      }
+
+      chipsWrapper.innerHTML = html;
+      container.style.display = 'block';
     }
 
     // 種族データからステータスおよび特性（行動回数）を一括反映
     function applyMonsterStats(name) {
-      if (!name || !monsterData[name]) return;
+      const hiddenInput = document.getElementById('monster-select');
+      const selectBtn = document.getElementById('monster-select-btn');
+      if (hiddenInput) hiddenInput.value = name || '';
+      if (selectBtn) selectBtn.textContent = name ? name : '-- 種族を選択 --';
+
+      if (!name || !monsterData[name]) {
+        updateMonsterTraitsDisplay();
+        return;
+      }
       const m = monsterData[name];
       document.getElementById('stat-hp').value = m.hp;
       document.getElementById('stat-mp').value = m.mp;
@@ -2006,6 +2302,9 @@
       if (targetAction) {
         document.getElementById('ai').value = targetAction;
       }
+
+      // 特性表示も更新
+      updateMonsterTraitsDisplay();
     }
 
     // サイズ切替時に種族が選ばれていれば特性（行動回数）を自動更新
@@ -2022,6 +2321,7 @@
           aiSelect.value = targetAction;
         }
       }
+      updateMonsterTraitsDisplay();
     }
 
     // 手動でステータス値を変更した際、現在の種族データと食い違った場合は種族プルダウンをクリア
@@ -2441,6 +2741,7 @@
         closePersonalityModal();
         closeSkillModal();
         closeAccessoryModal();
+        closeMonsterModal();
       }
     });
 
@@ -2714,6 +3015,10 @@
                   const btn = document.getElementById('personality-btn');
                   if (btn) btn.textContent = data[id];
                 }
+                if (id === 'monster-select') {
+                  const btn = document.getElementById('monster-select-btn');
+                  if (btn) btn.textContent = data[id];
+                }
               }
             }
           });
@@ -2744,6 +3049,7 @@
             }
           }
         }
+        updateMonsterTraitsDisplay();
         const savedTab = localStorage.getItem('dqm3_status_tab');
         if (savedTab === 'chart') {
           switchStatusTab('chart');
