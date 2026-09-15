@@ -1800,7 +1800,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <input type="text" id="monster-search-input" placeholder="種族名で絞込み"
               style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
-              oninput="filterMonsterList()">
+              oninput="debounceFilterMonsterList()">
             <select id="monster-sort-select"
               style="width: 100%; padding: 6px 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 0.85rem;"
               onchange="filterMonsterList()">
@@ -2185,6 +2185,14 @@
       if (incRadio) incRadio.checked = true;
       if (sortSelect) sortSelect.value = 'res-desc';
       filterMonsterList();
+    }
+
+    let searchDebounceTimer = null;
+    function debounceFilterMonsterList() {
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        filterMonsterList();
+      }, 500);
     }
 
     function filterMonsterList() {
